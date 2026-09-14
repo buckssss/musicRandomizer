@@ -38,7 +38,7 @@ function doPost(e) {
       if (data[i][0].toString().trim() === params.name.trim()) {
         var rowNum = i + 1;
         sheet.getRange(rowNum, 2).setValue('listening'); // Столбец B
-        sheet.getRange(rowNum, 7).setValue(params.service);   // Столбец H (какой сервис)
+        sheet.getRange(rowNum, 8).setValue(params.service);   // Столбец H (какой сервис)
         if (params.memo) {
           sheet.getRange(rowNum, 4).setValue(params.memo);    // Столбец D (заметка)
         }

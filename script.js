@@ -230,6 +230,7 @@ function generateSelection() {
     const randomKey = keys[Math.floor(Math.random() * keys.length)];
     
     lastGeneratedAlbum = randomAlbum; // Запоминаем, какой альбом выпал
+    lastGeneratedServiceKey = randomKey;
 
     document.getElementById('resAlbum').innerText = randomAlbum.name;
     document.getElementById('resService').innerText = serviceNames[randomKey];
