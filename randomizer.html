@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Музыкальный Облачный Трекер v9</title>
+    <script src="script.js"></script>
+    <link href="style.css" rel="stylesheet" />
+</head>
+<body>
+
+<div class="card">
+    <h2>🎵 Облачный Рандомизатор</h2>
+    
+    <!-- Панель облачной синхронизации -->
+    <div class="cloud-panel">
+        <button class="cloud-btn load" onclick="loadFromCloud()">☁️ Загрузить из таблицы</button>
+    </div>
+    
+    <div class="add-block">
+        <textarea id="newAlbumsInput" class="add-input" placeholder="Исполнитель - Альбом..."></textarea>
+        <button class="add-btn" onclick="addAlbums()">Добавить релизы ➕</button>
+    </div>
+    
+    <label>🎧 Сейчас слушается на сервисах:</label>
+    <div id="activeSessionsContainer" class="list-container active-sessions"></div>
+
+    <!-- Очередь неслушанного -->
+    <label>📚 В очереди (неслушанное): (<span id="countQueue">0</span>)</label>
+    <div id="listContainer" class="list-container"></div>
+
+    <div class="tabs">
+        <button id="tabQueue" class="tab active" onclick="switchTab('queue')">Очередь (<span id="countQueue">0</span>)</button>
+        <button id="tabLiked" class="tab" onclick="switchTab('liked')">👍 Like (<span id="countLiked">0</span>)</button>
+        <button id="tabDisliked" class="tab" onclick="switchTab('disliked')">👎 Dislike (<span id="countDisliked">0</span>)</button>
+    </div>
+    
+    <div class="services-group">
+        <label class="service-item"><input type="checkbox" value="Yandex" checked> Yandex Music</label>
+        <label class="service-item"><input type="checkbox" value="Spotify" checked> Spotify</label>
+        <label class="service-item"><input type="checkbox" value="YTMusic" checked> YouTube Music</label>
+        <label class="service-item"><input type="checkbox" value="Deezer" checked> Deezer</label>
+        <label class="service-item"><input type="checkbox" value="Qobuz" checked> Qobuz</label>
+    </div>
+    
+    <button class="main-btn" onclick="generateSelection()">Выбрать альбом и сервис 🎲</button>
+    
+    <div id="resultBox" class="result-box">
+        <div class="result-title">Ваш выбор:</div>
+        <div id="resAlbum" class="result-value"></div>
+        <div class="result-title">в сервисе:</div>
+        <div id="resService" class="result-service"></div>
+        <a id="searchLink" class="listen-btn" target="_blank" href="#">Найти и слушать 🚀</a>
+        <!-- поле для ввода заметок/мемо -->
+        <div class="memo-block">
+            <label style="margin-top:0; font-size:12px;">Заметка к альбому (необязательно):</label>
+            <input type="text" id="albumMemoInput" class="memo-input" placeholder="Ваши впечатления, треки...">
+        </div>
+
+        <!-- Новая кнопка фиксации сессии -->
+        <button class="now-playing-btn" onclick="markAsListening()">🎧 Поставить статус: Слушаю сейчас</button>
+
+        <div style="font-size: 11px; color: #888; text-transform: uppercase; margin: 15px 0 5px 0; letter-spacing: 0.5px;">Или завершить с оценкой:</div>
+        <div class="rate-group">
+            <button class="rate-btn like" onclick="rateLastAlbum('liked')">👍 Like</button>
+            <button class="rate-btn neutral" onclick="rateLastAlbum('ok')">Норм</button>
+            <button class="rate-btn neutral" onclick="rateLastAlbum('meh')">Такое себе</button>
+            <button class="rate-btn dislike" onclick="rateLastAlbum('disliked')">👎 Dislike</button>
+        </div>
+    </div>
+</div>
+</body>
+</html>
