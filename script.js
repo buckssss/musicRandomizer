@@ -1,8 +1,17 @@
 // =========================================================================
 // НАСТРОЙКА: Вставьте вашу ссылку веб-приложения Google Apps Script (/exec)
 // =========================================================================
-const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbzKYpfPR9JPAcnkvFOrOjBYXl_yvZqRNi363RQkt21Pgvuib2In3OcqXUrZtK4Nw82K/exec";
+const SUPABASE_URL = "https://zrwfbyjlyohbygguwfpo.supabase.co"; 
+const SUPABASE_ANON_KEY = "sb_publishable_ZaFXrDhp8Tx5p_X93DB7wQ_4wPZzyk8";
+const TABLE_NAME = "albums_to_listen"; // Имя вашей таблицы в Supabase
 // =========================================================================
+
+// Базовый заголовок для авторизации запросов в Supabase
+const sHeaders = {
+    "apikey": SUPABASE_ANON_KEY,
+    "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+    "Content-Type": "application/json"
+};
 
 let queueAlbums = [];
 let activeSessions =[];
@@ -15,16 +24,13 @@ window.onload = function() {
 };
 
 async function loadFromCloud() {
-    if (GOOGLE_API_URL.includes("ВСТАВЬТЕ_СЮДА")) {
-        alert("Пожалуйста, настройте GOOGLE_API_URL в начале JS-кода!");
-        return;
-    }
     try {
-        // Добавляем к ссылке случайный параметр ?_=(время), чтобы Google не отдавал старый закэшированный ответ
-        const cacheBuster = (GOOGLE_API_URL.includes("?") ? "&" : "?") + "_=" + Date.now();
-        const response = await fetch(GOOGLE_API_URL + cacheBuster);
-        
-        // ЕСЛИ СЕРВЕР ОТДАЛ ОШИБКУ, МЫ ВЫВЕДЕМ ЕЁ ТЕКСТ В КОНСОЛЬ ДЛЯ ОДНОЗНАЧНОЙ ДИАГНОСТИКИ
+        // Запрашиваем данные напрямую из Supabase
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE_NAME}?select=*`, {
+            method: "GET",
+            headers: sHeaders
+        });
+
         if (!response.ok) {
             const errText = await response.text();
             console.error("Ответ сервера Google:", errText);
@@ -39,7 +45,8 @@ async function loadFromCloud() {
         data.forEach(item => {
             // Проверяем, что объект пришел корректным и содержит поле статуса
             if (item) {
-                const status = item.isListened.trim().toLowerCase();
+                const status = item.listened ? item.listened.toString().trim().toLowerCase() : "";
+                
                 if (status === "listening") {
                     activeSessions.push(item);
                 } else if (status !== "да" && status !== "yes" && status !== "true" && status !== "added" && status !== "listening") {
@@ -78,7 +85,7 @@ function renderList() {
         item.style.borderRadius = "6px";
         item.style.fontSize = "13px";
         item.style.borderLeft = "4px solid #1db954";
-        item.innerText = queueAlbums[i].name;
+        item.innerText = queueAlbums[i].album;
         container.appendChild(item);
     }
 
@@ -110,19 +117,19 @@ function renderActiveSessions() {
         item.style.flexDirection = "column"; // Разворачиваем карточку вертикально для удобства поля ввода
         item.style.alignItems = "stretch";
     
-        const safeName = album.name.replace(/'/g, "\\'");
+        const safeName = album.album.replace(/'/g, "\\'");
 
         // Генерируем уникальный ID для инпута этой сессии, используя индекс
         const inputId = `sessMemo_${index}`;
 
         // Если заметка уже есть в таблице, подставляем её как дефолтное значение (value)
-        const currentMemoValue = album.memo ? album.memo.replace(/"/g, '&quot;') : "";
+        const currentMemoValue = album.note ? album.note.replace(/"/g, '&quot;') : "";
     
         // Кнопка быстрого закрытия сессии прямо из списка
         item.innerHTML = `
             <div class="session-info">
                 <span class="session-badge">${album.service} | </span> 
-                <strong>${album.name}</strong>
+                <strong>${album.album}</strong>
             </div>
             
             <!-- Поле ввода комментария прямо внутри карточки сессии -->
@@ -133,10 +140,10 @@ function renderActiveSessions() {
             
             <div class="session-actions" style="justify-content: flex-end; width: 100%; border-top: 1px solid #2c3e50; padding-top: 8px;">
                 <!-- Передаем ID инпута в функцию закрытия сессии -->
-                <button class="sess-btn liked" onclick="finishSessionDirectly('${album.name}', 'liked', '${inputId}')">👍</button>
-                <button class="sess-btn ok" onclick="finishSessionDirectly('${album.name}', 'ok', '${inputId}')">ok</button>
-                <button class="sess-btn meh" onclick="finishSessionDirectly('${album.name}', 'meh', '${inputId}')">meh</button>
-                <button class="sess-btn disliked" onclick="finishSessionDirectly('${album.name}', 'disliked', '${inputId}')">👎</button>
+                <button class="sess-btn liked" onclick="finishSessionDirectly('${album.album}', 'liked', '${inputId}')">👍</button>
+                <button class="sess-btn ok" onclick="finishSessionDirectly('${album.album}', 'ok', '${inputId}')">ok</button>
+                <button class="sess-btn meh" onclick="finishSessionDirectly('${album.album}', 'meh', '${inputId}')">meh</button>
+                <button class="sess-btn disliked" onclick="finishSessionDirectly('${album.album}', 'disliked', '${inputId}')">👎</button>
             </div>
         `;
         container.appendChild(item);
@@ -149,13 +156,15 @@ async function finishSessionDirectly(albumName, ratingValue, inputId) {
     const finalMemo = inputElement ? inputElement.value.trim() : "";
 
     try {
-        await fetch(GOOGLE_API_URL, {
-            method: 'POST',
+        const url = `${SUPABASE_URL}/rest/v1/${TABLE_NAME}?album=eq.${encodeURIComponent(albumName)}`;
+        
+        await fetch(url, {
+            method: 'PATCH',
+            headers: sHeaders,
             body: JSON.stringify({
-                action: 'update',
-                name: albumName,
+                listened: 'true',
                 rating: ratingValue,
-                memo: finalMemo
+                note: finalMemo
             })
         });
         loadFromCloud();
@@ -171,13 +180,15 @@ async function markAsListening() {
     document.getElementById('resultBox').style.display = 'none';
     
     try {
-        await fetch(GOOGLE_API_URL, {
-            method: 'POST',
+        const url = `${SUPABASE_URL}/rest/v1/${TABLE_NAME}?album=eq.${encodeURIComponent(lastGeneratedAlbum.album)}`;
+        
+        await fetch(url, {
+            method: 'PATCH',
+            headers: sHeaders,
             body: JSON.stringify({ 
-                action: 'start_listening', 
-                name: lastGeneratedAlbum.name, 
+                listened: 'listening',
                 service: serviceNames[lastGeneratedServiceKey],
-                memo: memoValue
+                note: memoValue
             })
         });
         document.getElementById('albumMemoInput').value = "";
@@ -198,9 +209,16 @@ async function addAlbums() {
     // Перебираем и отправляем в таблицу построчно
     for (let line of lines) {
         try {
-            await fetch(GOOGLE_API_URL, {
+            await fetch(`${SUPABASE_URL}/rest/v1/${TABLE_NAME}`, { 
                 method: 'POST',
-                body: JSON.stringify({ action: 'add', name: line })
+                headers: sHeaders,
+                body: JSON.stringify({ 
+                    album: line, 
+                    listened: '',
+                    rating: '',
+                    note: '',
+                    service: ''
+                }) 
             });
         } catch (e) {
             console.error("Ошибка добавления строки: " + line);
@@ -221,13 +239,15 @@ async function rateLastAlbum(ratingValue) {
     document.getElementById('resultBox').style.display = 'none';
     
     try {
-        await fetch(GOOGLE_API_URL, {
-            method: 'POST',
+        const url = `${SUPABASE_URL}/rest/v1/${TABLE_NAME}?album=eq.${encodeURIComponent(lastGeneratedAlbum.album)}`;
+        
+        await fetch(url, {
+            method: 'PATCH',
+            headers: sHeaders,
             body: JSON.stringify({ 
-                action: 'update', 
-                name: lastGeneratedAlbum.name, 
+                listened: 'true',
                 rating: ratingValue,
-                memo: memoValue
+                note: memoValue
             })
         });
         // Очищаем поле ввода для следующего раза
@@ -258,11 +278,11 @@ function generateSelection() {
     lastGeneratedAlbum = randomAlbum; // Запоминаем, какой альбом выпал
     lastGeneratedServiceKey = randomKey;
 
-    document.getElementById('resAlbum').innerText = randomAlbum.name;
+    document.getElementById('resAlbum').innerText = randomAlbum.album;
     document.getElementById('resService').innerText = serviceNames[randomKey];
-    document.getElementById('albumMemoInput').value = randomAlbum.memo ? randomAlbum.memo : "";
+    document.getElementById('albumMemoInput').value = randomAlbum.note ? randomAlbum.note : "";
 
-    const q = encodeURIComponent(randomAlbum.name);
+    const q = encodeURIComponent(randomAlbum.album);
     let url = "";
 
     if (randomKey === 'Yandex') url = "https://music.yandex.ru/search?text=" + q;
