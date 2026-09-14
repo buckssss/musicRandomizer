@@ -177,7 +177,7 @@ async function markAsListening() {
                 action: 'start_listening', 
                 name: lastGeneratedAlbum.name, 
                 service: serviceNames[lastGeneratedServiceKey],
-                memo: safeMemo
+                memo: memoValue
             })
         });
         document.getElementById('albumMemoInput').value = "";
