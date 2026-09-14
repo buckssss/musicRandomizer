@@ -1,4 +1,219 @@
-// =========================================================================
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Музыкальный Облачный Трекер v9</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            padding: 15px;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+        }
+        .card {
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            max-width: 480px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        h2 { text-align: center; color: #fff; margin: 0 0 15px 0; }
+        label { font-weight: bold; display: block; margin-bottom: 8px; font-size: 14px; color: #aaa; }
+
+        .cloud-panel {
+            background: #1b2838;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            border: 1px solid #105a8a;
+            display: flex;
+            gap: 8px;
+        }
+        .cloud-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 13px;
+            color: white;
+        }
+        .cloud-btn.save { background: #107c41; }
+        .cloud-btn.load { background: #007acc; }
+
+        .add-block {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: #252525;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            border: 1px solid #333;
+        }
+        textarea.add-input {
+            width: 100%;
+            height: 50px;
+            background: #121212;
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: #fff;
+            padding: 8px;
+            font-size: 14px;
+            box-sizing: border-box;
+            resize: none;
+            font-family: inherit;
+        }
+        .add-btn {
+            background: #444;
+            color: #fff;
+            border: none;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .tabs { display: flex; gap: 3px; }
+        .tab {
+            flex: 1;
+            padding: 10px 4px;
+            background: #252525;
+            border: none;
+            color: #777;
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+            font-weight: bold;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+        .tab.active { background: #2a2a2a; color: #fff; }
+        #tabQueue.active { border-bottom: 3px solid #1db954; }
+        #tabLiked.active { border-bottom: 3px solid #ff4a5a; }
+        #tabDisliked.active { border-bottom: 3px solid #ff0000; }
+
+        .list-container {
+            background: #2a2a2a;
+            border-radius: 0 0 8px 8px;
+            max-height: 180px;
+            overflow-y: auto;
+            border: 1px solid #333;
+            padding: 8px;
+            margin-bottom: 16px;
+        }
+        .album-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 10px;
+            background: #1e1e1e;
+            margin-bottom: 5px;
+            border-radius: 6px;
+            font-size: 13px;
+            border-left: 4px solid #333;
+        }
+        .list-container.active-sessions { background: #1b2838; border-color: #105a8a; max-height: 160px; }
+
+        .album-item.queue { border-left-color: #1db954; }
+        .album-item.liked { border-left-color: #ff4a5a; }
+        .album-item.disliked { border-left-color: #7f8c8d; }
+        .album-text { flex: 1; maroon: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        .actions { display: flex; gap: 4px; }
+        .action-btn { background: #333; border: none; color: #fff; padding: 4px 6px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+        .action-btn.del { background: #cc3333; }
+
+        .services-group { margin: 16px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .service-item { background: #2a2a2a; padding: 10px; border-radius: 8px; display: flex; align-items: center; cursor: pointer; font-size: 14px; }
+        .service-item input { margin-right: 10px; }
+
+        .main-btn { width: 100%; padding: 14px; background: #1db954; border: none; border-radius: 25px; color: white; font-size: 16px; font-weight: bold; cursor: pointer; }
+
+        .result-box { margin-top: 15px; padding: 15px; background: #282828; border-radius: 12px; display: none; text-align: center; border: 1px solid #444; }
+        .result-title { font-size: 11px; color: #888; text-transform: uppercase; }
+        .result-value { font-size: 18px; font-weight: bold; color: #fff; margin: 8px 0; }
+        .result-service { font-size: 18px; font-weight: bold; color: #fff; font-weight: 500; margin-bottom: 12px; }
+        .listen-btn { display: block; padding: 10px 20px; background: #fff; color: #121212; text-decoration: none; border-radius: 25px; font-weight: bold; margin: 0 auto 12px auto; max-width: 180px; }
+        .now-playing-btn { width: 100%; padding: 10px; background: #2c5d88; border: none; border-radius: 8px; color: white; font-weight: bold; font-size: 13px; cursor: pointer; margin-bottom: 10px; }
+        .now-playing-btn:hover { background: #3672a5; }
+        .rate-group { display: flex; gap: 8px; border-top: 1px solid #383838; padding-top: 12px; }
+        .rate-btn { flex: 1; padding: 8px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; }
+        .rate-btn.like { background: #1db954; }
+        .rate-btn.neutral { background: #4a4a4a; }
+        .rate-btn.dislike { background: #912F2F; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>🎵 Облачный Рандомизатор</h2>
+    
+    <!-- Панель облачной синхронизации -->
+    <div class="cloud-panel">
+        <button class="cloud-btn load" onclick="loadFromCloud()">☁️ Загрузить из таблицы</button>
+    </div>
+    
+    <div class="add-block">
+        <textarea id="newAlbumsInput" class="add-input" placeholder="Исполнитель - Альбом..."></textarea>
+        <button class="add-btn" onclick="addAlbums()">Добавить релизы ➕</button>
+    </div>
+    
+    <label>🎧 Сейчас слушается на сервисах:</label>
+    <div id="activeSessionsContainer" class="list-container active-sessions"></div>
+
+    <!-- Очередь неслушанного -->
+    <label>📚 В очереди (неслушанное): (<span id="countQueue">0</span>)</label>
+    <div id="listContainer" class="list-container"></div>
+
+    <div class="tabs">
+        <button id="tabQueue" class="tab active" onclick="switchTab('queue')">Очередь (<span id="countQueue">0</span>)</button>
+        <button id="tabLiked" class="tab" onclick="switchTab('liked')">👍 Like (<span id="countLiked">0</span>)</button>
+        <button id="tabDisliked" class="tab" onclick="switchTab('disliked')">👎 Dislike (<span id="countDisliked">0</span>)</button>
+    </div>
+    
+    <div class="services-group">
+        <label class="service-item"><input type="checkbox" value="Yandex" checked> Yandex Music</label>
+        <label class="service-item"><input type="checkbox" value="Spotify" checked> Spotify</label>
+        <label class="service-item"><input type="checkbox" value="YTMusic" checked> YouTube Music</label>
+        <label class="service-item"><input type="checkbox" value="Deezer" checked> Deezer</label>
+        <label class="service-item"><input type="checkbox" value="Qobuz" checked> Qobuz</label>
+    </div>
+    
+    <button class="main-btn" onclick="generateSelection()">Выбрать альбом и сервис 🎲</button>
+    
+    <div id="resultBox" class="result-box">
+        <div class="result-title">Ваш выбор:</div>
+        <div id="resAlbum" class="result-value"></div>
+        <div class="result-title">в сервисе:</div>
+        <div id="resService" class="result-service"></div>
+        <a id="searchLink" class="listen-btn" target="_blank" href="#">Найти и слушать 🚀</a>
+        <!-- поле для ввода заметок/мемо -->
+        <div class="memo-block">
+            <label style="margin-top:0; font-size:12px;">Заметка к альбому (необязательно):</label>
+            <input type="text" id="albumMemoInput" class="memo-input" placeholder="Ваши впечатления, треки...">
+        </div>
+
+        <!-- Новая кнопка фиксации сессии -->
+        <button class="now-playing-btn" onclick="markAsListening()">🎧 Поставить статус: Слушаю сейчас</button>
+
+        <div style="font-size: 11px; color: #888; text-transform: uppercase; margin: 15px 0 5px 0; letter-spacing: 0.5px;">Или завершить с оценкой:</div>
+        <div class="rate-group">
+            <button class="rate-btn like" onclick="rateLastAlbum('liked')">👍 Like</button>
+            <button class="rate-btn neutral" onclick="rateLastAlbum('ok')">Норм</button>
+            <button class="rate-btn neutral" onclick="rateLastAlbum('meh')">Такое себе</button>
+            <button class="rate-btn dislike" onclick="rateLastAlbum('disliked')">👎 Dislike</button>
+        </div>
+    </div>
+</div>
+<script>
+    // =========================================================================
 // НАСТРОЙКА: Вставьте вашу ссылку веб-приложения Google Apps Script (/exec)
 // =========================================================================
 const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbzKYpfPR9JPAcnkvFOrOjBYXl_yvZqRNi363RQkt21Pgvuib2In3OcqXUrZtK4Nw82K/exec";
@@ -252,3 +467,6 @@ function generateSelection() {
 
     document.getElementById('resultBox').style.display = 'block';
 }
+</script>
+</body>
+</html>
