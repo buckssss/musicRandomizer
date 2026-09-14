@@ -104,26 +104,64 @@ function renderActiveSessions() {
         return;
     }
 
-    activeSessions.forEach(album => {
+    activeSessions.forEach((album, index) => {
         const item = document.createElement('div');
         item.className = "session-item";
-        
+        item.style.flexDirection = "column"; // Разворачиваем карточку вертикально для удобства поля ввода
+        item.style.alignItems = "stretch";
+    
+        const safeName = album.name.replace(/'/g, "\\'");
+
+        // Генерируем уникальный ID для инпута этой сессии, используя индекс
+        const inputId = `sessMemo_${index}`;
+
+        // Если заметка уже есть в таблице, подставляем её как дефолтное значение (value)
+        const currentMemoValue = album.memo ? album.memo.replace(/"/g, '&quot;') : "";
+    
         // Кнопка быстрого закрытия сессии прямо из списка
         item.innerHTML = `
             <div class="session-info">
                 <span class="session-badge">${album.service} | </span> 
-                <strong>${album.name}</strong> | 
-                ${album.memo ? `<div class="session-memo">${album.memo}</div>` : ''}
+                <strong>${album.name}</strong>
             </div>
-            <div class="session-actions">
-                <button class="sess-btn liked" onclick="finishSessionDirectly('${album.name}', 'liked')">👍</button>
-                <button class="sess-btn ok" onclick="finishSessionDirectly('${album.name}', 'ok')">ok</button>
-                <button class="sess-btn meh" onclick="finishSessionDirectly('${album.name}', 'meh')">meh</button>
-                <button class="sess-btn disliked" onclick="finishSessionDirectly('${album.name}', 'disliked')">👎</button>
+            
+            <!-- Поле ввода комментария прямо внутри карточки сессии -->
+            <div style="margin-bottom: 10px;">
+                <input type="text" id="${inputId}" class="memo-input" style="margin-top: 0; width: 100%;" 
+                       placeholder="Добавить финальные впечатления..." value="${currentMemoValue}">
+            </div>
+            
+            <div class="session-actions" style="justify-content: flex-end; width: 100%; border-top: 1px solid #2c3e50; padding-top: 8px;">
+                <!-- Передаем ID инпута в функцию закрытия сессии -->
+                <button class="sess-btn liked" onclick="finishSessionDirectly('${album.name}', 'liked', '${inputId}')">👍</button>
+                <button class="sess-btn ok" onclick="finishSessionDirectly('${album.name}', 'ok', '${inputId}')">ok</button>
+                <button class="sess-btn meh" onclick="finishSessionDirectly('${album.name}', 'meh', '${inputId}')">meh</button>
+                <button class="sess-btn disliked" onclick="finishSessionDirectly('${album.name}', 'disliked', '${inputId}')">👎</button>
             </div>
         `;
         container.appendChild(item);
     });
+}
+// Закрытие сессии напрямую из фрейма кнопками
+async function finishSessionDirectly(albumName, ratingValue, inputId) {
+    // Находим инпут на экране по его уникальному ID и забираем текст
+    const inputElement = document.getElementById(inputId);
+    const finalMemo = inputElement ? inputElement.value.trim() : "";
+
+    try {
+        await fetch(GOOGLE_API_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'update',
+                name: albumName,
+                rating: ratingValue,
+                memo: finalMemo
+            })
+        });
+        loadFromCloud();
+    } catch (e) {
+        alert("Ошибка: " + e.message);
+    }
 }
 // Команда "Слушаю сейчас" (Фиксация во фрейме и таблице)
 async function markAsListening() {
@@ -139,25 +177,13 @@ async function markAsListening() {
                 action: 'start_listening', 
                 name: lastGeneratedAlbum.name, 
                 service: serviceNames[lastGeneratedServiceKey],
-                memo: memoValue
+                memo: safeMemo
             })
         });
         document.getElementById('albumMemoInput').value = "";
         loadFromCloud(); 
     } catch (e) {
         alert("Ошибка старта сессии: " + e.message);
-    }
-}
-// Закрытие сессии напрямую из фрейма кнопками
-async function finishSessionDirectly(albumName, ratingValue, memoValue) {
-    try {
-        await fetch(GOOGLE_API_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'update', name: albumName, rating: ratingValue, memo: memoValue })
-        });
-        loadFromCloud();
-    } catch (e) {
-        alert("Ошибка: " + e.message);
     }
 }
 

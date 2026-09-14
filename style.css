@@ -113,6 +113,12 @@ textarea.add-input {
     border-left: 4px solid #333;
 }
 .list-container.active-sessions { background: #1b2838; border-color: #105a8a; max-height: 160px; }
+/* Разделитель между карточками активных сессий */
+.session-item:not(:last-child) {
+    border-bottom: 2px dashed #105a8a; /* Пунктирная синяя линия, подходящая под цвет фрейма */
+    padding-bottom: 16px;              /* Отступ перед линией */
+    margin-bottom: 16px;              /* Отступ после линии */
+}
 
 .album-item.queue { border-left-color: #1db954; }
 .album-item.liked { border-left-color: #ff4a5a; }
