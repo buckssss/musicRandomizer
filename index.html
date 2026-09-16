@@ -360,10 +360,10 @@ function renderActiveSessions() {
             
             <div class="session-actions" style="justify-content: flex-end; width: 100%; border-top: 1px solid #2c3e50; padding-top: 8px;">
                 <!-- Передаем ID инпута в функцию закрытия сессии -->
-                <button class="sess-btn liked" onclick="finishSessionDirectly('${album.album}', 'liked', '${inputId}')">👍</button>
-                <button class="sess-btn ok" onclick="finishSessionDirectly('${album.album}', 'ok', '${inputId}')">ok</button>
-                <button class="sess-btn meh" onclick="finishSessionDirectly('${album.album}', 'meh', '${inputId}')">meh</button>
-                <button class="sess-btn disliked" onclick="finishSessionDirectly('${album.album}', 'disliked', '${inputId}')">👎</button>
+                <button class="sess-btn liked" onclick="finishSessionDirectly('${safeName}', 'liked', '${inputId}')">👍</button>
+                <button class="sess-btn ok" onclick="finishSessionDirectly('${safeName}', 'ok', '${inputId}')">ok</button>
+                <button class="sess-btn meh" onclick="finishSessionDirectly('${safeName}', 'meh', '${inputId}')">meh</button>
+                <button class="sess-btn disliked" onclick="finishSessionDirectly('${safeName}', 'disliked', '${inputId}')">👎</button>
             </div>
         `;
         container.appendChild(item);
