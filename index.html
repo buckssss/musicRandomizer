@@ -281,7 +281,7 @@ async function loadFromCloud() {
         renderList();
         renderActiveSessions();
     } catch (e) {
-        alert("Ошибка загрузки данных из таблицы:\n" + e.message + "\n\nПроверьте, что в Apps Script выбрано 'Доступ: Все' и создана 'Новая версия'!");
+        alert("Ошибка загрузки данных из таблицы albums_to_listen:\n" + e.message);
     }
 }
 
