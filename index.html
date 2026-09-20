@@ -195,7 +195,12 @@
     
     <div id="resultBox" class="result-box">
         <div class="result-title">Ваш выбор:</div>
-        <div id="resAlbum" class="result-value"></div>
+       <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin: 10px 0;">
+    <div id="resAlbum" class="result-value" style="margin: 0;"></div>
+    <!-- Кнопка копирования -->
+    <button onclick="copyToClipboard()" title="Скопировать название" 
+            style="background: #333; border: none; color: #fff; cursor: pointer; padding: 4px 6px; border-radius: 4px; font-size: 14px;">📋</button>
+</div>
         <div class="result-title">в сервисе:</div>
         <div id="resService" class="result-service"></div>
         <a id="searchLink" class="listen-btn" target="_blank" href="#">Найти и слушать 🚀</a>
@@ -518,6 +523,48 @@ function generateSelection() {
 
     document.getElementById('resultBox').style.display = 'block';
 }
+
+function copyToClipboard() {
+    const albumText = document.getElementById('resAlbum').innerText;
+    if (!albumText) return;
+
+    // Попытка использовать современный метод
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(albumText)
+            .then(() => alert("Скопировано в буфер! 📋"))
+            .catch(() => fallbackCopy(albumText)); // Если не вышло, уходим на запасной метод
+    } else {
+        // Если контекст небезопасный (file:/// или фрейм), сразу используем запасной метод
+        fallbackCopy(albumText);
+    }
+}
+
+// Запасной классический метод копирования (работает везде без исключений)
+function fallbackCopy(text) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    
+    // Делаем элемент невидимым для пользователя
+    textArea.style.position = "fixed";
+    textArea.style.left = "-999999px";
+    textArea.style.top = "-999999px";
+    document.body.appendChild(textArea);
+    
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        const successful = document.execCommand('copy');
+        if (!successful) {
+            console.error("Не удалось скопировать текст через execCommand");
+        }
+    } catch (err) {
+        console.error("Ошибка универсального метода копирования:", err);
+    }
+    
+    document.body.removeChild(textArea);
+}
+
 </script>
 </body>
 </html>
