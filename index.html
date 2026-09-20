@@ -94,10 +94,6 @@
             font-size: 11px;
             text-transform: uppercase;
         }
-        .tab.active { background: #2a2a2a; color: #fff; }
-        #tabQueue.active { border-bottom: 3px solid #1db954; }
-        #tabLiked.active { border-bottom: 3px solid #ff4a5a; }
-        #tabDisliked.active { border-bottom: 3px solid #ff0000; }
 
         .list-container {
             background: #2a2a2a;
@@ -153,6 +149,51 @@
         .rate-btn.like { background: #1db954; }
         .rate-btn.neutral { background: #4a4a4a; }
         .rate-btn.dislike { background: #912F2F; }
+        .meta-card-box {
+          background: #f8f9fa;
+          border: 1px solid #e9ecef;
+          border-radius: 8px;
+          padding: 12px;
+          margin: 12px 0;
+          text-align: left;
+        }
+        .meta-info-row {
+          font-size: 13px;
+          color: #333;
+          margin-bottom: 5px;
+        }
+        .meta-links-title {
+          font-size: 12px;
+          font-weight: bold;
+          color: #6c757d;
+          margin-top: 10px;
+          margin-bottom: 6px;
+          border-top: 1px dashed #dee2e6;
+          padding-top: 6px;
+        }
+        .meta-links-wrapper {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+        }
+        .meta-link-btn {
+          display: inline-block;
+          background: #ffffff;
+          border: 1px solid #ced4da;
+          color: #495057;
+          padding: 4px 10px;
+          border-radius: 14px;
+          font-size: 12px;
+          text-decoration: none;
+          font-weight: 500;
+          transition: all 0.15s ease;
+        }
+        .meta-link-btn:hover {
+          background: #007bff;
+          color: #ffffff;
+          border-color: #007bff;
+        }
+
     </style>
 </head>
 <body>
@@ -175,14 +216,7 @@
 
     <!-- Очередь неслушанного -->
     <label>📚 В очереди (неслушанное): (<span id="countQueue">0</span>)</label>
-    <div id="listContainer" class="list-container"></div>
 
-    <div class="tabs">
-        <button id="tabQueue" class="tab active" onclick="switchTab('queue')">Очередь (<span id="countQueue">0</span>)</button>
-        <button id="tabLiked" class="tab" onclick="switchTab('liked')">👍 Like (<span id="countLiked">0</span>)</button>
-        <button id="tabDisliked" class="tab" onclick="switchTab('disliked')">👎 Dislike (<span id="countDisliked">0</span>)</button>
-    </div>
-    
     <div class="services-group">
         <label class="service-item"><input type="checkbox" value="Yandex" checked> Yandex Music</label>
         <label class="service-item"><input type="checkbox" value="Spotify" checked> Spotify</label>
@@ -195,14 +229,24 @@
     
     <div id="resultBox" class="result-box">
         <div class="result-title">Ваш выбор:</div>
-       <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin: 10px 0;">
-    <div id="resAlbum" class="result-value" style="margin: 0;"></div>
-    <!-- Кнопка копирования -->
-    <button onclick="copyToClipboard()" title="Скопировать название" 
-            style="background: #333; border: none; color: #fff; cursor: pointer; padding: 4px 6px; border-radius: 4px; font-size: 14px;">📋</button>
-</div>
+        <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin: 10px 0;">
+            <div id="resAlbum" class="result-value" style="margin: 0;"></div>
+            <!-- Кнопка копирования -->
+            <button onclick="copyToClipboard()" title="Скопировать название" 
+            style="
+                background: #333; 
+                border: none; 
+                color: #fff; 
+                cursor: pointer; 
+                padding: 4px 6px; 
+                border-radius: 4px; 
+                font-size: 14px;
+            ">
+            📋</button>
+        </div>
         <div class="result-title">в сервисе:</div>
         <div id="resService" class="result-service"></div>
+        <div id="album-meta-box"></div>
         <a id="searchLink" class="listen-btn" target="_blank" href="#">Найти и слушать 🚀</a>
         <!-- поле для ввода заметок/мемо -->
         <div class="memo-block">
@@ -283,47 +327,12 @@ async function loadFromCloud() {
         const counter = document.getElementById('countQueue');
         if (counter) counter.innerText = queueAlbums.length;
 
-        renderList();
         renderActiveSessions();
     } catch (e) {
         alert("Ошибка загрузки данных из таблицы albums_to_listen:\n" + e.message);
     }
 }
 
-// ОТРИСОВКА СПИСКА ОЧЕРЕДИ
-function renderList() {
-    const container = document.getElementById('listContainer');
-    if (!container) return;
-    container.innerHTML = "";
-
-    if (queueAlbums.length === 0) {
-        container.innerHTML = '<div style="text-align:center;color:#666;padding:15px;font-size:13px;">Все альбомы прослушаны! 🎉</div>';
-        return;
-    }
-
-    const limit = Math.min(queueAlbums.length, 30);
-    for (let i = 0; i < limit; i++) {
-        const item = document.createElement('div');
-        item.style.padding = "6px 10px";
-        item.style.marginBottom = "5px";
-        item.style.background = "#1e1e1e";
-        item.style.borderRadius = "6px";
-        item.style.fontSize = "13px";
-        item.style.borderLeft = "4px solid #1db954";
-        item.innerText = queueAlbums[i].album;
-        container.appendChild(item);
-    }
-
-    if (queueAlbums.length > 30) {
-        const more = document.createElement('div');
-        more.style.textAlignment = "center";
-        more.style.color = "#666";
-        more.style.fontSize = "12px";
-        more.style.marginTop = "8px";
-        more.innerText = `... и еще ${queueAlbums.length - 30} альбомов в очереди`;
-        container.appendChild(more);
-    }
-}
 
 // Отрисовка НОВОГО фрейма активных сессий прослушивания
 function renderActiveSessions() {
@@ -374,6 +383,7 @@ function renderActiveSessions() {
         container.appendChild(item);
     });
 }
+
 // Закрытие сессии напрямую из фрейма кнопками
 async function finishSessionDirectly(albumName, ratingValue, inputId) {
     // Находим инпут на экране по его уникальному ID и забираем текст
@@ -397,6 +407,7 @@ async function finishSessionDirectly(albumName, ratingValue, inputId) {
         alert("Ошибка: " + e.message);
     }
 }
+
 // Команда "Слушаю сейчас" (Фиксация во фрейме и таблице)
 async function markAsListening() {
     if (!lastGeneratedAlbum || !lastGeneratedServiceKey) return;
@@ -522,7 +533,144 @@ function generateSelection() {
     btn.style.color = randomKey === 'Yandex' ? '#121212' : '#fff';
 
     document.getElementById('resultBox').style.display = 'block';
+    fetchAlbumMetaFromMusicBrainz(randomAlbum.album);
 }
+
+// Переменная для отслеживания текущего альбома, чтобы кнопка Refresh знала, что запрашивать
+let currentMetaAlbumString = "";
+
+async function fetchAlbumMetaFromMusicBrainz(albumString, isRetry = false) {
+  const metaBox = document.getElementById('album-meta-box');
+  if (!metaBox) return;
+
+  // Сохраняем имя альбома глобально для ручного рефреша
+  currentMetaAlbumString = albumString;
+
+  // Если это первый запуск (а не авто-повтор), показываем анимацию поиска
+  if (!isRetry) {
+    metaBox.innerHTML = '<div style="font-size:12px; color:#666;">🔍 Ищу метаданные релиза...</div>';
+  }
+
+  try {
+    // Очистка строки от мусора
+    let cleanQuery = albumString
+      .replace(/\s*[\(\[^]*?(remaster\vert{}deluxe\vert{}edition\vert{}bonus\vert{}live\vert{}lp\vert{}ep\vert{}reissue\vert{}expanded)[^]*?[\)\]]/gi, '')
+      .trim();
+
+    const query = encodeURIComponent(cleanQuery);
+    const cacheBuster = new Date().getTime();
+    const url = `https://musicbrainz.org/ws/2/release-group/?query=${query}&inc=url-rels&fmt=json&limit=1&_cb=${cacheBuster}`;
+
+    const response = await fetch(url, {
+      headers: { 'Accept': 'application/json' }
+    });
+    
+    // ХЕНДЛЕР ОШИБКИ 503 (Сервер занят / Лимит превышен)
+    if (response.status === 503) {
+      if (!isRetry) {
+        // ИДЕЯ 1: Если поймали ошибку впервые — молча пишем статус и делаем авто-ретрай через 2 секунды
+        metaBox.innerHTML = '<div style="font-size:12px; color:#e0a800;">⏳ Сервер занят. Пробую еще раз...</div>';
+        setTimeout(() => {
+          fetchAlbumMetaFromMusicBrainz(albumString, true); // true означает, что это повторная попытка
+        }, 2100); // 2.1 секунды гарантированно сбросят секундный лимит IP
+        return;
+      } else {
+        // Если даже авто-ретрай не помог — выводим красивую кнопку ручного обновления
+        throw new Error("BUSY");
+      }
+    }
+
+    if (!response.ok) throw new Error('NETWORK_ERROR');
+    const data = await response.json();
+    
+    // Мы получили уникальный MBID!
+    const mbid = data['release-groups'][0].id;
+
+    // Запрашиваем связи
+    const lookupUrl = `http://musicbrainz.org/ws/2/release-group/${mbid}?fmt=json&inc=url-rels&_cb=${cacheBuster}`;
+    
+    const lookupResponse = await fetch(lookupUrl, { headers: { 'Accept': 'application/json' } });
+    
+    if (lookupResponse.status === 503) {
+      handleMetaBusy(albumString, isRetry, metaBox);
+      return;
+    }
+    if (!lookupResponse.ok) throw new Error('NETWORK_ERROR');
+    
+    const release = await lookupResponse.json();
+
+    // Рендеринг данных (код остался прежним)
+    if (release['title'] && release['title'].length > 0) {
+      const reldata = data['release-groups'][0];
+      const year = release['first-release-date'] ? release['first-release-date'].substring(0, 4) : '—';
+      const type = release['primary-type'] || 'Альбом';
+      
+      let tags = '—';
+      if (reldata.tags && reldata.tags.length > 0) {
+        tags = reldata.tags.slice(0, 4).map(t => t.name).join(', ');
+      }
+
+      let externalLinksHtml = '';
+      if (release.relations && release.relations.length > 0) {
+        const serviceIcons = {
+          'discogs': 'Discogs',
+          'rateyourmusic': 'RYM',
+          'allmusic': 'AllMusic',
+          'spirit-of-rock': 'Spirit Of Rock',
+          'last.fm': 'Last.FM'
+        };
+
+        release.relations.forEach(rel => {
+          if (rel.url && rel.url.resource) {
+            const fullUrl = rel.url.resource;
+            for (const [key, label] of Object.entries(serviceIcons)) {
+              if (fullUrl.includes(key)) {
+                externalLinksHtml += `<a href="${fullUrl}" target="_blank" class="meta-link-btn">${label}</a>`;
+                break;
+              }
+            }
+          }
+        });
+      }
+
+      if (!externalLinksHtml) externalLinksHtml = '<span style="color:#999; font-size:12px;">Доп. ссылки отсутствуют</span>';
+
+      metaBox.innerHTML = `
+        <div class="meta-card-box">
+          <div class="meta-info-row">📅 <b>Год:</b> ${year} | 💿 <b>Тип:</b> ${type}</div>
+          <div class="meta-info-row">🏷️ <b>Жанры:</b> <span style="color:#007bff">${tags}</span></div>
+          <div class="meta-links-title">🔗 Внешние ресурсы:</div>
+          <div class="meta-links-wrapper">${externalLinksHtml}</div>
+        </div>
+      `;
+    } else {
+      metaBox.innerHTML = '<div style="font-size:12px; color:#999;">Meta: Релиз не найден в MusicBrainz</div>';
+    }
+  } catch (error) {
+    console.error("MusicBrainz API Error:", error);
+    
+    // ИДЕЯ 2: Отрисовка сообщения об ошибке с кнопкой ручного перезапуска
+    if (error.message === "BUSY") {
+      metaBox.innerHTML = `
+        <div style="font-size:12px; color:#d9534f; background:#fdf7f7; padding:8px; border-radius:6px; border:1px solid #eed3d7; display:flex; justify-content:space-between; align-items:center;">
+          <span>⚠️ Сервер MusicBrainz перегружен</span>
+          <button onclick="retryMetaSearchManual()" style="background:#d9534f; color:#fff; border:none; padding:3px 8px; border-radius:4px; font-size:11px; cursor:pointer; font-weight:bold;">🔄 Обновить</button>
+        </div>
+      `;
+    } else {
+      metaBox.innerHTML = '<div style="font-size:12px; color:#999;">Meta: Не удалось загрузить информацию</div>';
+    }
+  }
+}
+
+// Функция для ручной кнопки "Обновить"
+function retryMetaSearchManual() {
+  if (currentMetaAlbumString) {
+    fetchAlbumMetaFromMusicBrainz(currentMetaAlbumString, false);
+  }
+}
+
+
 
 function copyToClipboard() {
     const albumText = document.getElementById('resAlbum').innerText;
@@ -531,7 +679,7 @@ function copyToClipboard() {
     // Попытка использовать современный метод
     if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(albumText)
-            .then(() => alert("Скопировано в буфер! 📋"))
+            .then(() => '')
             .catch(() => fallbackCopy(albumText)); // Если не вышло, уходим на запасной метод
     } else {
         // Если контекст небезопасный (file:/// или фрейм), сразу используем запасной метод
