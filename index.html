@@ -740,7 +740,7 @@ async function fetchAlbumMetaFromMusicBrainz(albumString, isRetry = false) {
     const mbid = data['release-groups'][0].id;
 
     // Запрашиваем связи
-    const lookupUrl = `http://musicbrainz.org/ws/2/release-group/${mbid}?fmt=json&inc=url-rels&_cb=${cacheBuster}`;
+    const lookupUrl = `https://musicbrainz.org/ws/2/release-group/${mbid}?fmt=json&inc=url-rels&_cb=${cacheBuster}`;
     
     const lookupResponse = await fetch(lookupUrl, { headers: { 'Accept': 'application/json' } });
     
