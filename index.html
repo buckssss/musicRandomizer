@@ -385,7 +385,7 @@ textarea.add-input {
         <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin: 10px 0;">
             <div id="resAlbum" class="result-value" style="margin: 0;"></div>
             <!-- Кнопка копирования -->
-            <button onclick="copyToClipboard()" title="Скопировать название" 
+            <button onclick="copyToClipboard(resAlbum)" title="Скопировать название" 
             style="
                 background: #333; 
                 border: none; 
@@ -517,6 +517,17 @@ function renderActiveSessions() {
             <div class="session-info">
                 <span class="session-badge">${album.service} | </span> 
                 <strong>${album.album}</strong>
+                <button onclick="fallbackCopy('${safeName}')" title="Скопировать название" 
+                    style="
+                        background: #333; 
+                        border: none; 
+                        color: #fff; 
+                        cursor: pointer; 
+                        padding: 4px 6px; 
+                        border-radius: 4px; 
+                        font-size: 14px;">
+                📋
+                </button>
             </div>
             
             <!-- Поле ввода комментария прямо внутри карточки сессии -->
@@ -848,8 +859,9 @@ function retryMetaSearchManual() {
   }
 }
 
-function copyToClipboard() {
-    const albumText = document.getElementById('resAlbum').innerText;
+function copyToClipboard(copyText) {
+    const albumText = copyText.innerText;
+    // const albumText = document.getElementById('resAlbum').innerText;
     if (!albumText) return;
 
     // Попытка использовать современный метод
