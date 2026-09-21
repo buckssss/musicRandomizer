@@ -5,195 +5,336 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Музыкальный Облачный Трекер v9</title>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #121212;
-            color: #e0e0e0;
-            padding: 15px;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-        }
-        .card {
-            background: #1e1e1e;
-            padding: 20px;
-            border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-            max-width: 480px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        h2 { text-align: center; color: #fff; margin: 0 0 15px 0; }
-        label { font-weight: bold; display: block; margin-bottom: 8px; font-size: 14px; color: #aaa; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #121212;
+    color: #e0e0e0;
+    padding: 15px;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+}
+.card {
+    background: #1e1e1e;
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    max-width: 480px;
+    width: 100%;
+    box-sizing: border-box;
+}
+h2 { text-align: center; color: #fff; margin: 0 0 15px 0; }
+label { font-weight: bold; display: block; margin-bottom: 8px; font-size: 14px; color: #aaa; }
 
-        .cloud-panel {
-            background: #1b2838;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            border: 1px solid #105a8a;
-            display: flex;
-            gap: 8px;
-        }
-        .cloud-btn {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 13px;
-            color: white;
-        }
-        .cloud-btn.save { background: #107c41; }
-        .cloud-btn.load { background: #007acc; }
+.cloud-panel {
+    background: #1b2838;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    border: 1px solid #105a8a;
+    display: flex;
+    gap: 8px;
+}
+.cloud-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 13px;
+    color: white;
+}
+.cloud-btn.save { background: #107c41; }
+.cloud-btn.load { background: #007acc; }
 
-        .add-block {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            background: #252525;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            border: 1px solid #333;
-        }
-        textarea.add-input {
-            width: 100%;
-            height: 50px;
-            background: #121212;
-            border: 1px solid #444;
-            border-radius: 6px;
-            color: #fff;
-            padding: 8px;
-            font-size: 14px;
-            box-sizing: border-box;
-            resize: none;
-            font-family: inherit;
-        }
-        .add-btn {
-            background: #444;
-            color: #fff;
-            border: none;
-            padding: 8px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-        }
+.add-block {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: #252525;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    border: 1px solid #333;
+}
+textarea.add-input {
+    width: 100%;
+    height: 50px;
+    background: #121212;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: #fff;
+    padding: 8px;
+    font-size: 14px;
+    box-sizing: border-box;
+    resize: none;
+    font-family: inherit;
+}
+.add-btn {
+    background: #444;
+    color: #fff;
+    border: none;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
 
-        .tabs { display: flex; gap: 3px; }
-        .tab {
-            flex: 1;
-            padding: 10px 4px;
-            background: #252525;
-            border: none;
-            color: #777;
-            cursor: pointer;
-            border-radius: 8px 8px 0 0;
-            font-weight: bold;
-            font-size: 11px;
-            text-transform: uppercase;
-        }
+.tabs { display: flex; gap: 3px; }
+.tab {
+    flex: 1;
+    padding: 10px 4px;
+    background: #252525;
+    border: none;
+    color: #777;
+    cursor: pointer;
+    border-radius: 8px 8px 0 0;
+    font-weight: bold;
+    font-size: 11px;
+    text-transform: uppercase;
+}
 
-        .list-container {
-            background: #2a2a2a;
-            border-radius: 0 0 8px 8px;
-            max-height: 180px;
-            overflow-y: auto;
-            border: 1px solid #333;
-            padding: 8px;
-            margin-bottom: 16px;
-        }
-        .album-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 6px 10px;
-            background: #1e1e1e;
-            margin-bottom: 5px;
-            border-radius: 6px;
-            font-size: 13px;
-            border-left: 4px solid #333;
-        }
-        .list-container.active-sessions { background: #1b2838; border-color: #105a8a; max-height: 160px; }
-        /* Разделитель между карточками активных сессий */
-        .session-item:not(:last-child) {
-            border-bottom: 2px dashed #105a8a; /* Пунктирная синяя линия, подходящая под цвет фрейма */
-            padding-bottom: 16px;              /* Отступ перед линией */
-            margin-bottom: 16px;              /* Отступ после линии */
-        }
-        .album-item.queue { border-left-color: #1db954; }
-        .album-item.liked { border-left-color: #ff4a5a; }
-        .album-item.disliked { border-left-color: #7f8c8d; }
-        .album-text { flex: 1; maroon: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.list-container {
+    background: #2a2a2a;
+    border-radius: 0 0 8px 8px;
+    max-height: 180px;
+    overflow-y: auto;
+    border: 1px solid #333;
+    padding: 8px;
+    margin-bottom: 16px;
+}
+.album-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    background: #1e1e1e;
+    margin-bottom: 5px;
+    border-radius: 6px;
+    font-size: 13px;
+    border-left: 4px solid #333;
+}
+.list-container.active-sessions { background: #1b2838; border-color: #105a8a; max-height: 160px; }
+/* Разделитель между карточками активных сессий */
+.session-item:not(:last-child) {
+    border-bottom: 2px dashed #105a8a; /* Пунктирная синяя линия, подходящая под цвет фрейма */
+    padding-bottom: 16px;              /* Отступ перед линией */
+    margin-bottom: 16px;              /* Отступ после линии */
+}
+.album-item.queue { border-left-color: #1db954; }
+.album-item.liked { border-left-color: #ff4a5a; }
+.album-item.disliked { border-left-color: #7f8c8d; }
+.album-text { flex: 1; maroon: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-        .actions { display: flex; gap: 4px; }
-        .action-btn { background: #333; border: none; color: #fff; padding: 4px 6px; border-radius: 4px; cursor: pointer; font-size: 11px; }
-        .action-btn.del { background: #cc3333; }
+.actions { display: flex; gap: 4px; }
+.action-btn { background: #333; border: none; color: #fff; padding: 4px 6px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+.action-btn.del { background: #cc3333; }
 
-        .services-group { margin: 16px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .service-item { background: #2a2a2a; padding: 10px; border-radius: 8px; display: flex; align-items: center; cursor: pointer; font-size: 14px; }
-        .service-item input { margin-right: 10px; }
+.services-group { margin: 16px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.service-item { background: #2a2a2a; padding: 10px; border-radius: 8px; display: flex; align-items: center; cursor: pointer; font-size: 14px; }
+.service-item input { margin-right: 10px; }
 
-        .main-btn { width: 100%; padding: 14px; background: #1db954; border: none; border-radius: 25px; color: white; font-size: 16px; font-weight: bold; cursor: pointer; }
+.main-btn { width: 100%; padding: 14px; background: #1db954; border: none; border-radius: 25px; color: white; font-size: 16px; font-weight: bold; cursor: pointer; }
 
-        .result-box { margin-top: 15px; padding: 15px; background: #282828; border-radius: 12px; display: none; text-align: center; border: 1px solid #444; }
-        .result-title { font-size: 11px; color: #888; text-transform: uppercase; }
-        .result-value { font-size: 18px; font-weight: bold; color: #fff; margin: 8px 0; }
-        .result-service { font-size: 18px; font-weight: bold; color: #fff; font-weight: 500; margin-bottom: 12px; }
-        .listen-btn { display: block; padding: 10px 20px; background: #fff; color: #121212; text-decoration: none; border-radius: 25px; font-weight: bold; margin: 0 auto 12px auto; max-width: 180px; }
-        .now-playing-btn { width: 100%; padding: 10px; background: #2c5d88; border: none; border-radius: 8px; color: white; font-weight: bold; font-size: 13px; cursor: pointer; margin-bottom: 10px; }
-        .now-playing-btn:hover { background: #3672a5; }
-        .rate-group { display: flex; gap: 8px; border-top: 1px solid #383838; padding-top: 12px; }
-        .rate-btn { flex: 1; padding: 8px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; }
-        .rate-btn.like { background: #1db954; }
-        .rate-btn.neutral { background: #4a4a4a; }
-        .rate-btn.dislike { background: #912F2F; }
-        .meta-card-box {
-          background: #f8f9fa;
-          border: 1px solid #e9ecef;
-          border-radius: 8px;
-          padding: 12px;
-          margin: 12px 0;
-          text-align: left;
-        }
-        .meta-info-row {
-          font-size: 13px;
-          color: #333;
-          margin-bottom: 5px;
-        }
-        .meta-links-title {
-          font-size: 12px;
-          font-weight: bold;
-          color: #6c757d;
-          margin-top: 10px;
-          margin-bottom: 6px;
-          border-top: 1px dashed #dee2e6;
-          padding-top: 6px;
-        }
-        .meta-links-wrapper {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 6px;
-        }
-        .meta-link-btn {
-          display: inline-block;
-          background: #ffffff;
-          border: 1px solid #ced4da;
-          color: #495057;
-          padding: 4px 10px;
-          border-radius: 14px;
-          font-size: 12px;
-          text-decoration: none;
-          font-weight: 500;
-          transition: all 0.15s ease;
-        }
-        .meta-link-btn:hover {
-          background: #007bff;
-          color: #ffffff;
-          border-color: #007bff;
-        }
+.result-box { margin-top: 15px; padding: 15px; background: #282828; border-radius: 12px; display: none; text-align: center; border: 1px solid #444; }
+.result-title { font-size: 11px; color: #888; text-transform: uppercase; }
+.result-value { font-size: 18px; font-weight: bold; color: #fff; margin: 8px 0; }
+.result-service { font-size: 18px; font-weight: bold; color: #fff; font-weight: 500; margin-bottom: 12px; }
+.listen-btn { display: block; padding: 10px 20px; background: #fff; color: #121212; text-decoration: none; border-radius: 25px; font-weight: bold; margin: 0 auto 12px auto; max-width: 180px; }
+.now-playing-btn { width: 100%; padding: 10px; background: #2c5d88; border: none; border-radius: 8px; color: white; font-weight: bold; font-size: 13px; cursor: pointer; margin-bottom: 10px; }
+.now-playing-btn:hover { background: #3672a5; }
+.rate-group { display: flex; gap: 8px; border-top: 1px solid #383838; padding-top: 12px; }
+.rate-btn { flex: 1; padding: 8px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; }
+.rate-btn.like { background: #1db954; }
+.rate-btn.neutral { background: #4a4a4a; }
+.rate-btn.dislike { background: #912F2F; }
 
+/* Верхний ряд: Обложка + Инфо станут строго в одну линию */
+.meta-layout {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  width: 100%;
+}
+
+/* Общий контейнер */
+.meta-card-box {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 14px;
+  margin: 14px 0;
+  text-align: left;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+/* Правая колонка с метаданными */
+.meta-info-side {
+  flex: 1 1 0%;   
+  min-width: 0;   
+  display: flex;
+  flex-direction: column;
+  gap: 4px;       
+}
+/* Строка информации */
+.meta-info-row {
+  font-size: 13.5px;
+  color: #2b303a;
+  line-height: 1.4;
+  white-space: normal;      
+  word-break: break-word;   
+}
+/* Жанры */
+.meta-tags {
+  color: #007bff;
+  font-weight: 500;
+}
+.meta-links-title {
+  font-size: 12px;
+  font-weight: bold;
+  color: #6c757d;
+  margin-bottom: 6px;
+}
+.meta-links-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+/* Кнопки-ссылки */
+.meta-link-btn {
+  display: inline-block;
+  background: #ffffff;
+  border: 1px solid #ced4da;
+  color: #495057;
+  padding: 4px 10px;
+  border-radius: 14px;
+  font-size: 12px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+.meta-link-btn.primary-mb {
+  background: #ebfffa;
+  border-color: #23a07e;
+  color: #1c6e57;
+}
+.meta-link-btn:hover {
+  background: #007bff;
+  color: #ffffff;
+  border-color: #007bff;
+}
+/* Кликабельный контейнер обложки */
+.meta-cover-link {
+  display: block;
+  flex: 0 0 85px;  
+  width: 85px;     
+  height: 85px;    
+  border-radius: 8px;
+  overflow: hidden;
+  background: #e9ecef;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.meta-cover-link:hover {
+  transform: scale(1.03);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+/* Контейнер обложки */
+.meta-cover-side {
+  flex-shrink: 0;
+  width: 75px;
+  height: 75px;
+  position: relative;
+}
+.meta-album-art {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; 
+  display: block;
+  opacity: 0;
+  animation: fadeInImage 0.3s ease forwards;
+}
+/* Нижний блок внешних ссылок */
+.meta-footer-links {
+  border-top: 1px dashed #dee2e6;
+  padding-top: 8px;
+}
+/* Анимация проявления картинки */
+@keyframes fadeInImage {
+  to { opacity: 1; }
+}
+
+/* Оптимизация для темной темы (если она у вас есть) */
+@media (prefers-color-scheme: dark) {
+  .meta-album-art {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
+/* АДАПТАЦИЯ ПОД ТЕМНУЮ ТЕМУ */
+@media (prefers-color-scheme: dark) {
+  /* Затемняем сам подфрейм, делая его чуть светлее основного фона приложения */
+  .meta-card-box {
+    background: #1e1e1e; 
+    border-color: #2d2d2d;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Текст метаданных */
+  .meta-info-row {
+    color: #e0e0e0;
+  }
+
+  /* Жанры делаем более яркими для контраста в темноте */
+  .meta-tags {
+    color: #64b5f6; 
+  }
+
+  /* Тень для обложки в темной теме */
+  .meta-cover-link {
+    background: #2d2d2d;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Разделительная линия */
+  .meta-footer-links {
+    border-top-color: #3d3d3d;
+  }
+
+  .meta-links-title {
+    color: #888888;
+  }
+
+  /* Кнопки-ссылки в темной теме */
+  .meta-link-btn {
+    background: #2a2a2a;
+    border-color: #404040;
+    color: #cccccc;
+  }
+
+  .meta-link-btn:hover {
+    background: #29b6f6;
+    color: #121212;
+    border-color: #29b6f6;
+    box-shadow: 0 0 8px rgba(41, 182, 246, 0.4);
+  }
+
+  /* Фирменная кнопка MusicBrainz в темной теме */
+  .meta-link-btn.primary-mb {
+    background: #162d27;
+    border-color: #1f7a60;
+    color: #5cdbb5;
+  }
+
+  .meta-link-btn.primary-mb:hover {
+    background: #23a07e;
+    color: #ffffff;
+    border-color: #23a07e;
+    box-shadow: 0 0 8px rgba(35, 160, 126, 0.4);
+  }
+}
     </style>
 </head>
 <body>
@@ -610,7 +751,14 @@ async function fetchAlbumMetaFromMusicBrainz(albumString, isRetry = false) {
         tags = reldata.tags.slice(0, 4).map(t => t.name).join(', ');
       }
 
-      let externalLinksHtml = '';
+      // Генерируем прямую ссылку на страницу альбома на самом сайте MusicBrainz
+      const mbWebUrl = `https://musicbrainz.org/release-group/${mbid}`;
+
+      let externalLinksHtml = `
+        <a href="${mbWebUrl}" target="_blank" class="meta-link-btn primary-mb">
+          🔮 MusicBrainz
+        </a>
+      `;
       if (release.relations && release.relations.length > 0) {
         const serviceIcons = {
           'discogs': 'Discogs',
@@ -634,15 +782,35 @@ async function fetchAlbumMetaFromMusicBrainz(albumString, isRetry = false) {
       }
 
       if (!externalLinksHtml) externalLinksHtml = '<span style="color:#999; font-size:12px;">Доп. ссылки отсутствуют</span>';
-
+      // Отрисовываем основной интерфейс
+      const coverImgId = `cover-${mbid}`;
       metaBox.innerHTML = `
         <div class="meta-card-box">
-          <div class="meta-info-row">📅 <b>Год:</b> ${year} | 💿 <b>Тип:</b> ${type}</div>
-          <div class="meta-info-row">🏷️ <b>Жанры:</b> <span style="color:#007bff">${tags}</span></div>
-          <div class="meta-links-title">🔗 Внешние ресурсы:</div>
-          <div class="meta-links-wrapper">${externalLinksHtml}</div>
+          <div class="meta-layout">
+            <a href="${mbWebUrl}" target="_blank" class="meta-cover-link" title="Перейти на MusicBrainz">
+                <img 
+                  id="${coverImgId}" 
+                  class="meta-album-art" 
+                  src="data:image/svg+xml;utf8,<svg xmlns='http://w3.org' width='100' height='100' viewBox='0 0 24 24' fill='%23ccc'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14.18V10h3V8h-4v6.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3z'/></svg>" alt="Cover">
+            </a>
+            <div class="meta-info-row">📅 <b>Год:</b> ${year}</div>
+            <div class="meta-info-row">💿 <b>Тип:</b> ${type}</div>
+            <div class="meta-info-row">🏷️ <b>Жанры:</b> <span style="color:#007bff">${tags}</span></div>
+          </div>
+          <div class="meta-footer-links">
+            <div class="meta-links-title">🔗 Внешние ресурсы:</div>
+            <div class="meta-links-wrapper">${externalLinksHtml}</div>
+          </div>
         </div>
       `;
+
+      // Запускаем фоновый поиск обложки по валидному MBID
+      const coverUrl = `https://coverartarchive.org/release-group/${mbid}/front-250`;
+      fetch(coverUrl, { method: 'GET' })
+        .then(imgResp => {
+          if (imgResp.ok) document.getElementById(coverImgId).src = coverUrl;
+        })
+        .catch(() => {});
     } else {
       metaBox.innerHTML = '<div style="font-size:12px; color:#999;">Meta: Релиз не найден в MusicBrainz</div>';
     }
@@ -669,8 +837,6 @@ function retryMetaSearchManual() {
     fetchAlbumMetaFromMusicBrainz(currentMetaAlbumString, false);
   }
 }
-
-
 
 function copyToClipboard() {
     const albumText = document.getElementById('resAlbum').innerText;
