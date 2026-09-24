@@ -617,10 +617,7 @@ async function addAlbums() {
                 headers: sHeaders,
                 body: JSON.stringify({ 
                     album: line, 
-                    listened: '',
-                    rating: '',
-                    note: '',
-                    service: ''
+                    note: ' | added from widget'
                 }) 
             });
         } catch (e) {
