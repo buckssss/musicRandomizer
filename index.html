@@ -448,7 +448,7 @@ window.onload = function() {
 async function loadFromCloud() {
     try {
         // Запрашиваем данные напрямую из Supabase
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE_NAME}?select=album,listened,note,service`, {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE_NAME}?select=album,listened,note,service&or=(listened.eq.listening,listened.is.null)`, {
             method: "GET",
             mode: 'cors', // Жестко указываем режим CORS
             headers: sHeaders
