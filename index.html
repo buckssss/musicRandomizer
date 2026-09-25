@@ -428,12 +428,6 @@ const SUPABASE_ANON_KEY = "sb_publishable_ZaFXrDhp8Tx5p_X93DB7wQ_4wPZzyk8";
 const TABLE_NAME = "albums_to_listen"; // Имя вашей таблицы в Supabase
 // =========================================================================
 
-// Базовый заголовок для авторизации запросов в Supabase
-const sHeaders = {
-    "apikey": SUPABASE_ANON_KEY,
-    "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-    "Content-Type": "application/json"
-};
 
 let queueAlbums = [];
 let activeSessions =[];
@@ -445,46 +439,102 @@ window.onload = function() {
     loadFromCloud();
 };
 
+let queueFetchRetryCount = 0;
+const MAX_FETCH_RETRIES = 3;
 async function loadFromCloud() {
+    const cacheBuster = new Date().getTime();
     try {
+      const queueBaseUrl = `${SUPABASE_URL}/rest/v1/${TABLE_NAME}?select=album,listened,note,service&or=(listened.eq.listening,listened.is.null)`;
+
+      let tempQueue = [];      // Сюда будем собирать пачки
+      let offset = 0;          // Стартовая позиция для Range
+      const chunkSize = 500;   // Размер одной пачки данных
+      let hasMoreData = true;  // Флаг остановки цикла
+      
+      while (hasMoreData) {
+        // Формируем диапазон
+        const rangeHeader = `${offset}-${offset + chunkSize - 1}`;
+        
         // Запрашиваем данные напрямую из Supabase
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE_NAME}?select=album,listened,note,service&or=(listened.eq.listening,listened.is.null)`, {
+        const response = await fetch(
+          queueBaseUrl, {
             method: "GET",
+            cache: 'no-store',
             mode: 'cors', // Жестко указываем режим CORS
-            headers: sHeaders
-        });
+            headers: {
+              "apikey": SUPABASE_ANON_KEY,
+              "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+              'Range': rangeHeader,
+              'X-Cache-Buster': cacheBuster
+            }
+          });
 
         if (!response.ok) {
-            const errText = await response.text();
-            console.error("Ответ сервера Google:", errText);
-            throw new Error(`Статус сервера: ${response.status}`);
+          const errText = await response.text();
+          console.error("Ответ сервера:", errText);
+          throw new Error(`Сбой на диапазоне ${rangeHeader}: ${response.status}`);
         }
         
-        const data = await response.json();
-        
-        queueAlbums = [];
-        activeSessions = [];
-        
-        data.forEach(item => {
-            // Проверяем, что объект пришел корректным и содержит поле статуса
-            if (item) {
-                const status = item.listened ? item.listened.toString().trim().toLowerCase() : "";
-                
-                if (status === "listening") {
-                    activeSessions.push(item);
-                } else if (status !== "да" && status !== "yes" && status !== "true" && status !== "added" && status !== "listening") {
-                    queueAlbums.push(item);
-                }
-            }
-        });
+        // Проверяем валидность прилетевшего текста
+        const rawText = (await response.text()).trim();
+        if (!rawText.startsWith('[') || !rawText.endsWith(']')) {
+          throw new Error(`INCOMPLETE_CHUNK (Данные на диапазоне ${rangeHeader} повреждены)`);
+        }
 
-        const counter = document.getElementById('countQueue');
-        if (counter) counter.innerText = queueAlbums.length;
+        const chunkData = JSON.parse(rawText);
 
-        renderActiveSessions();
-    } catch (e) {
-        alert("Ошибка загрузки данных из таблицы albums_to_listen:\n" + e.message);
+        // Склеиваем полученную пачку с основным массивом в памяти
+        tempQueue = tempQueue.concat(chunkData);
+
+        // Если сервер вернул меньше строк, чем мы просили (меньше 500) — значит, база закончилась
+        if (chunkData.length < chunkSize) {
+          hasMoreData = false;
+        } else {
+          // Иначе сдвигаем указатель на следующие 500 строк
+          offset += chunkSize;
+        }
+      }
+
+      // Записываем финальный склеенный массив в глобальную переменную
+      window.globalActiveQueue = tempQueue;
+      queueFetchRetryCount = 0; // Сброс счетчика ошибок при полном успехе
+
+    } catch (error) {
+      console.error("Ошибка циклической загрузки очереди:", error.message);
+
+      // Автоповтор при падении сети или битом JSON в любой из пачек
+      if (queueFetchRetryCount < MAX_FETCH_RETRIES) {
+        queueFetchRetryCount++;
+        setTimeout(() => {
+          loadFromCloud();
+        }, 2500);
+      } else {
+        console.error("❌ Ошибка сети", error.message);
+      }
     }
+
+    const data = await globalActiveQueue; //.json();
+      
+    queueAlbums = [];
+    activeSessions = [];
+      
+    data.forEach(item => {
+      // Проверяем, что объект пришел корректным и содержит поле статуса
+      if (item) {
+        const status = item.listened ? item.listened.toString().trim().toLowerCase() : "";
+        
+        if (status === "listening") {
+            activeSessions.push(item);
+        } else if (status !== "да" && status !== "yes" && status !== "true" && status !== "added" && status !== "listening") {
+            queueAlbums.push(item);
+        }
+      }
+    });
+
+    const counter = document.getElementById('countQueue');
+    if (counter) counter.innerText = queueAlbums.length;
+
+    renderActiveSessions();
 }
 
 
