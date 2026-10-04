@@ -376,6 +376,7 @@ textarea.add-input {
         <label class="service-item"><input type="checkbox" value="YTMusic" checked> YouTube Music</label>
         <label class="service-item"><input type="checkbox" value="Deezer" checked> Deezer</label>
         <label class="service-item"><input type="checkbox" value="Qobuz" checked> Qobuz</label>
+        <label class="service-item"><input type="checkbox" value="Tidal" checked> Tidal</label>
     </div>
     
     <button class="main-btn" onclick="generateSelection()">Выбрать альбом и сервис 🎲</button>
@@ -431,7 +432,7 @@ const TABLE_NAME = "albums_to_listen"; // Имя вашей таблицы в Su
 
 let queueAlbums = [];
 let activeSessions =[];
-const serviceNames = { Yandex: "Yandex Music", Spotify: "Spotify", YTMusic: "YouTube Music", Qobuz: "Qobuz", Deezer: "Deezer" };
+const serviceNames = { Yandex: "Yandex Music", Spotify: "Spotify", YTMusic: "YouTube Music", Qobuz: "Qobuz", Deezer: "Deezer", Tidal: "Tidal"};
 let lastGeneratedAlbum = null;
 let lastGeneratedServiceKey = null;
 
@@ -756,6 +757,7 @@ function generateSelection() {
     else if (randomKey === 'YTMusic') url = "https://music.youtube.com/search?q=" + q;
     else if (randomKey === 'Deezer') url = "https://www.deezer.com/search/" + q + "/album";
     else if (randomKey === 'Qobuz') url = "https://play.qobuz.com/search?query=" + q + "&i=all";
+    else if (randomKey === 'Tidal') url = "https://tidal.com/search/albums?q=" + q;
 
     const btn = document.getElementById('searchLink');
     btn.href = url;
