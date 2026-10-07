@@ -428,9 +428,12 @@ const SUPABASE_URL = "https://zrwfbyjlyohbygguwfpo.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_ZaFXrDhp8Tx5p_X93DB7wQ_4wPZzyk8";
 const TABLE_NAME = "albums_to_listen"; // Имя вашей таблицы в Supabase
 // =========================================================================
+const POCKETBASE_URL = "http://192.168.1.166:8099"; 
+const POCKETBASE_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb2xsZWN0aW9uSWQiOiJwYmNfMzE0MjYzNTgyMyIsImV4cCI6MTc5MTQxMDk0OSwiaWQiOiJ6c2F5c3lwdTR2NnBibHYiLCJyZWZyZXNoYWJsZSI6ZmFsc2UsInR5cGUiOiJhdXRoIn0.edK1vgms-oTkJjvMH7RXMW2k5O2VdCWXKEV4qvnZ5rk";
+// =========================================================================
 
 
-let queueAlbums = [];
+//let queueAlbums = [];
 let activeSessions =[];
 const serviceNames = { Yandex: "Yandex Music", Spotify: "Spotify", YTMusic: "YouTube Music", Qobuz: "Qobuz", Deezer: "Deezer", Tidal: "Tidal"};
 let lastGeneratedAlbum = null;
@@ -442,31 +445,51 @@ window.onload = function() {
 
 let queueFetchRetryCount = 0;
 const MAX_FETCH_RETRIES = 3;
+
 async function loadFromCloud() {
     const cacheBuster = new Date().getTime();
+    // ==========================================================================
+    //  ЗАГРУЗКА АКТИВНЫХ СЕССИЙ (listened = 'listening')
+    // ==========================================================================
     try {
-      const queueBaseUrl = `${SUPABASE_URL}/rest/v1/${TABLE_NAME}?select=album,listened,note,service&or=(listened.eq.listening,listened.is.null)`;
+      const sessionsUrl = `${POCKETBASE_URL}/api/collections/albums_to_listen/records?filter=(listened='listening')&_cb=${cacheBuster}`;
+      const sResponse = await fetch(sessionsUrl, { method: 'GET', cache: 'no-store', headers: {"Authorization": `${POCKETBASE_TOKEN}`}});
+
+      if (sResponse.ok) {
+        const sData = await sResponse.json();
+        window.currentActiveSessions = sData.items;
+        if (typeof renderActiveSessions === 'function') renderActiveSessions();
+      }
+    } catch (err) {
+      console.error("Ошибка загрузки активных сессий:", err);
+    }
+
+    // ==========================================================================
+    //  ЗАГРУЗКА всего
+    // ==========================================================================
+    try {
 
       let tempQueue = [];      // Сюда будем собирать пачки
-      let offset = 0;          // Стартовая позиция для Range
+      let currentPage = 1;          // Стартовая позиция для Range
       const chunkSize = 500;   // Размер одной пачки данных
       let hasMoreData = true;  // Флаг остановки цикла
       
       while (hasMoreData) {
+        const queueBaseUrl = `${POCKETBASE_URL}/api/collections/albums_to_listen/records` + 
+                       `?page=${currentPage}` +
+                       `&perPage=${chunkSize}` +
+                       `&filter=(listened='')` +
+                       `&_cb=${cacheBuster}`;
         // Формируем диапазон
-        const rangeHeader = `${offset}-${offset + chunkSize - 1}`;
+        const rangeHeader = `${currentPage}-${currentPage + chunkSize - 1}`;
         
         // Запрашиваем данные напрямую из Supabase
         const response = await fetch(
           queueBaseUrl, {
             method: "GET",
             cache: 'no-store',
-            mode: 'cors', // Жестко указываем режим CORS
             headers: {
-              "apikey": SUPABASE_ANON_KEY,
-              "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-              'Range': rangeHeader,
-              'X-Cache-Buster': cacheBuster
+              "Authorization": `${POCKETBASE_TOKEN}`,
             }
           });
 
@@ -477,27 +500,29 @@ async function loadFromCloud() {
         }
         
         // Проверяем валидность прилетевшего текста
-        const rawText = (await response.text()).trim();
-        if (!rawText.startsWith('[') || !rawText.endsWith(']')) {
-          throw new Error(`INCOMPLETE_CHUNK (Данные на диапазоне ${rangeHeader} повреждены)`);
-        }
+        //const rawText = (await response.text()).trim();
+        //if (!rawText.startsWith('[') || !rawText.endsWith(']')) {
+        //  throw new Error(`INCOMPLETE_CHUNK (Данные на диапазоне ${rangeHeader} повреждены)`);
+        //}
 
-        const chunkData = JSON.parse(rawText);
+        const chunkData = await response.json();
 
         // Склеиваем полученную пачку с основным массивом в памяти
-        tempQueue = tempQueue.concat(chunkData);
+        if (chunkData.items && chunkData.items.length > 0) {
+          tempQueue = tempQueue.concat(chunkData.items);
+        }
 
         // Если сервер вернул меньше строк, чем мы просили (меньше 500) — значит, база закончилась
-        if (chunkData.length < chunkSize) {
+        if (chunkData.items.length < chunkSize) {
           hasMoreData = false;
         } else {
           // Иначе сдвигаем указатель на следующие 500 строк
-          offset += chunkSize;
+          currentPage++;
         }
       }
 
       // Записываем финальный склеенный массив в глобальную переменную
-      window.globalActiveQueue = tempQueue;
+      window.queueAlbums = tempQueue;
       queueFetchRetryCount = 0; // Сброс счетчика ошибок при полном успехе
 
     } catch (error) {
@@ -514,28 +539,8 @@ async function loadFromCloud() {
       }
     }
 
-    const data = await globalActiveQueue; //.json();
-      
-    queueAlbums = [];
-    activeSessions = [];
-      
-    data.forEach(item => {
-      // Проверяем, что объект пришел корректным и содержит поле статуса
-      if (item) {
-        const status = item.listened ? item.listened.toString().trim().toLowerCase() : "";
-        
-        if (status === "listening") {
-            activeSessions.push(item);
-        } else if (status !== "да" && status !== "yes" && status !== "true" && status !== "added" && status !== "listening") {
-            queueAlbums.push(item);
-        }
-      }
-    });
-
     const counter = document.getElementById('countQueue');
     if (counter) counter.innerText = queueAlbums.length;
-
-    renderActiveSessions();
 }
 
 
@@ -545,18 +550,19 @@ function renderActiveSessions() {
     if (!container) return;
     container.innerHTML = "";
 
-    if (activeSessions.length === 0) {
+    if (currentActiveSessions.length === 0) {
         container.innerHTML = '<div style="text-align:center;color:#888;padding:12px;font-size:13px;font-style:italic;">Нет активных сессий</div>';
         return;
     }
 
-    activeSessions.forEach((album, index) => {
+    currentActiveSessions.forEach((album, index) => {
         const item = document.createElement('div');
         item.className = "session-item";
         item.style.flexDirection = "column"; // Разворачиваем карточку вертикально для удобства поля ввода
         item.style.alignItems = "stretch";
     
         const safeName = album.album.replace(/'/g, "\\'");
+        const albumId = album.id;
 
         // Генерируем уникальный ID для инпута этой сессии, используя индекс
         const inputId = `sessMemo_${index}`;
@@ -591,10 +597,10 @@ function renderActiveSessions() {
             
             <div class="session-actions" style="justify-content: flex-end; width: 100%; border-top: 1px solid #2c3e50; padding-top: 8px;">
                 <!-- Передаем ID инпута в функцию закрытия сессии -->
-                <button class="sess-btn liked" onclick="finishSessionDirectly('${safeName}', 'liked', '${inputId}')">👍</button>
-                <button class="sess-btn ok" onclick="finishSessionDirectly('${safeName}', 'ok', '${inputId}')">ok</button>
-                <button class="sess-btn meh" onclick="finishSessionDirectly('${safeName}', 'meh', '${inputId}')">meh</button>
-                <button class="sess-btn disliked" onclick="finishSessionDirectly('${safeName}', 'disliked', '${inputId}')">👎</button>
+                <button class="sess-btn liked" onclick="finishSessionDirectly('${albumId}', 'liked', '${inputId}')">👍</button>
+                <button class="sess-btn ok" onclick="finishSessionDirectly('${albumId}', 'ok', '${inputId}')">ok</button>
+                <button class="sess-btn meh" onclick="finishSessionDirectly('${albumId}', 'meh', '${inputId}')">meh</button>
+                <button class="sess-btn disliked" onclick="finishSessionDirectly('${albumId}', 'disliked', '${inputId}')">👎</button>
             </div>
         `;
         container.appendChild(item);
@@ -603,19 +609,18 @@ function renderActiveSessions() {
 }
 
 // Закрытие сессии напрямую из фрейма кнопками
-async function finishSessionDirectly(albumName, ratingValue, inputId) {
+async function finishSessionDirectly(albumId, ratingValue, inputId) {
     // Находим инпут на экране по его уникальному ID и забираем текст
     const inputElement = document.getElementById(inputId);
     const finalMemo = inputElement ? inputElement.value.trim() : "";
 
     try {
-        const url = `${SUPABASE_URL}/rest/v1/${TABLE_NAME}?album=eq.${encodeURIComponent(albumName)}`;
+        const url = `${POCKETBASE_URL}/api/collections/albums_to_listen/records/${encodeURIComponent(albumId)}`;
         
         await fetch(url, {
             method: 'PATCH',
             headers: {
-              "apikey": SUPABASE_ANON_KEY,
-              "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+              "Authorization": `${POCKETBASE_TOKEN}`,
               "Content-Type": "application/json"
             },
             body: JSON.stringify({
@@ -638,13 +643,12 @@ async function markAsListening() {
     document.getElementById('resultBox').style.display = 'none';
     
     try {
-        const url = `${SUPABASE_URL}/rest/v1/${TABLE_NAME}?album=eq.${encodeURIComponent(lastGeneratedAlbum.album)}`;
+        const url = `${POCKETBASE_URL}/api/collections/albums_to_listen/records/${encodeURIComponent(lastGeneratedAlbum.id)}`;
         
         await fetch(url, {
             method: 'PATCH',
             headers: {
-              "apikey": SUPABASE_ANON_KEY,
-              "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+              "Authorization": `${POCKETBASE_TOKEN}`,
               "Content-Type": "application/json"
             },
             body: JSON.stringify({ 
@@ -671,11 +675,10 @@ async function addAlbums() {
     // Перебираем и отправляем в таблицу построчно
     for (let line of lines) {
         try {
-            await fetch(`${SUPABASE_URL}/rest/v1/${TABLE_NAME}`, { 
+            await fetch(`${POCKETBASE_URL}/api/collections/albums_to_listen/records`, { 
                 method: 'POST',
                 headers: {
-                  "apikey": SUPABASE_ANON_KEY,
-                  "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+                  "Authorization": `${POCKETBASE_TOKEN}`,
                   "Content-Type": "application/json"
                 },
                 body: JSON.stringify({ 
@@ -698,23 +701,24 @@ async function rateLastAlbum(ratingValue) {
     if (!lastGeneratedAlbum) return;
 
     const memoValue = document.getElementById('albumMemoInput').value.trim();
+    const service = lastGeneratedAlbum.service;
   
     document.getElementById('resultBox').style.display = 'none';
     
     try {
-        const url = `${SUPABASE_URL}/rest/v1/${TABLE_NAME}?album=eq.${encodeURIComponent(lastGeneratedAlbum.album)}`;
+        const url = `${POCKETBASE_URL}/api/collections/albums_to_listen/records/${encodeURIComponent(lastGeneratedAlbum.id)}`;
         
         await fetch(url, {
             method: 'PATCH',
             headers: {
-              "apikey": SUPABASE_ANON_KEY,
-              "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+              "Authorization": `${POCKETBASE_TOKEN}`,
               "Content-Type": "application/json"
             },
             body: JSON.stringify({ 
                 listened: 'true',
                 rating: ratingValue,
-                note: memoValue
+                note: memoValue,
+                service: service
             })
         });
         // Очищаем поле ввода для следующего раза
