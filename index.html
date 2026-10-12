@@ -4,128 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Музыкальный Облачный Трекер v9</title>
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+    <!-- <script src="dexie.js"></script> -->
     <style>
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: #121212;
-    color: #e0e0e0;
-    padding: 15px;
-    margin: 0;
-    display: flex;
-    justify-content: center;
-}
-.card {
-    background: #1e1e1e;
-    padding: 20px;
-    border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-    max-width: 480px;
-    width: 100%;
-    box-sizing: border-box;
-}
+body {font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;background-color: #121212;color: #e0e0e0;padding: 15px;margin: 0;display: flex;justify-content: center;}
+.card {background: #1e1e1e;padding: 20px;border-radius: 16px;box-shadow: 0 8px 24px rgba(0,0,0,0.3);max-width: 480px;width: 100%;box-sizing: border-box;}
 h2 { text-align: center; color: #fff; margin: 0 0 15px 0; }
 label { font-weight: bold; display: block; margin-bottom: 8px; font-size: 14px; color: #aaa; }
 
-.cloud-panel {
-    background: #1b2838;
-    padding: 12px;
-    border-radius: 8px;
-    margin-bottom: 16px;
-    border: 1px solid #105a8a;
-    display: flex;
-    gap: 8px;
-}
-.cloud-btn {
-    flex: 1;
-    padding: 10px;
-    border: none;
-    border-radius: 6px;
-    font-weight: bold;
-    cursor: pointer;
-    font-size: 13px;
-    color: white;
-}
+.cloud-panel {background: #1b2838;padding: 12px;border-radius: 8px;margin-bottom: 16px;border: 1px solid #105a8a;display: flex;gap: 8px;}
+.cloud-btn {flex: 1;padding: 10px;border: none;border-radius: 6px;font-weight: bold;cursor: pointer;font-size: 13px;color: white;}
 .cloud-btn.save { background: #107c41; }
 .cloud-btn.load { background: #007acc; }
 
-.add-block {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    background: #252525;
-    padding: 12px;
-    border-radius: 8px;
-    margin-bottom: 16px;
-    border: 1px solid #333;
-}
-textarea.add-input {
-    width: 100%;
-    height: 50px;
-    background: #121212;
-    border: 1px solid #444;
-    border-radius: 6px;
-    color: #fff;
-    padding: 8px;
-    font-size: 14px;
-    box-sizing: border-box;
-    resize: none;
-    font-family: inherit;
-}
-.add-btn {
-    background: #444;
-    color: #fff;
-    border: none;
-    padding: 8px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-}
+.add-block {display: flex;flex-direction: column;gap: 8px;background: #252525;padding: 12px;border-radius: 8px;margin-bottom: 16px;border: 1px solid #333;}
+textarea.add-input {width: 100%;height: 50px;background: #121212;border: 1px solid #444;border-radius: 6px;color: #fff;padding: 8px;font-size: 14px;box-sizing: border-box;resize: none;font-family: inherit;}
+.add-btn {background: #444;color: #fff;border: none;padding: 8px;border-radius: 6px;cursor: pointer;font-weight: bold;}
 
 .tabs { display: flex; gap: 3px; }
-.tab {
-    flex: 1;
-    padding: 10px 4px;
-    background: #252525;
-    border: none;
-    color: #777;
-    cursor: pointer;
-    border-radius: 8px 8px 0 0;
-    font-weight: bold;
-    font-size: 11px;
-    text-transform: uppercase;
-}
+.tab {flex: 1;padding: 10px 4px;background: #252525;border: none;color: #777;cursor: pointer;border-radius: 8px 8px 0 0;font-weight: bold;font-size: 11px;text-transform: uppercase;}
 
-.list-container {
-    background: #2a2a2a;
-    border-radius: 0 0 8px 8px;
-    max-height: 180px;
-    overflow-y: auto;
-    border: 1px solid #333;
-    padding: 8px;
-    margin-bottom: 16px;
-}
-.album-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 6px 10px;
-    background: #1e1e1e;
-    margin-bottom: 5px;
-    border-radius: 6px;
-    font-size: 13px;
-    border-left: 4px solid #333;
-}
+.list-container {background: #2a2a2a;border-radius: 0 0 8px 8px;max-height: 180px;overflow-y: auto;border: 1px solid #333;padding: 8px;margin-bottom: 16px;}
+.album-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: #1e1e1e; margin-bottom: 5px; border-radius: 6px; font-size: 13px; border-left: 4px solid #333;}
 .list-container.active-sessions { background: #1b2838; border-color: #105a8a; max-height: 160px; }
 /* Разделитель между карточками активных сессий */
-.session-item:not(:last-child) {
-    border-bottom: 2px dashed #105a8a; /* Пунктирная синяя линия, подходящая под цвет фрейма */
-    padding-bottom: 16px;              /* Отступ перед линией */
-    margin-bottom: 16px;              /* Отступ после линии */
-}
+.session-item:not(:last-child) {border-bottom: 2px dashed #105a8a; padding-bottom: 16px; margin-bottom: 16px;}
 .album-item.queue { border-left-color: #1db954; }
 .album-item.liked { border-left-color: #ff4a5a; }
 .album-item.disliked { border-left-color: #7f8c8d; }
-.album-text { flex: 1; maroon: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.album-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .actions { display: flex; gap: 4px; }
 .action-btn { background: #333; border: none; color: #fff; padding: 4px 6px; border-radius: 4px; cursor: pointer; font-size: 11px; }
@@ -141,6 +48,7 @@ textarea.add-input {
 .result-title { font-size: 11px; color: #888; text-transform: uppercase; }
 .result-value { font-size: 18px; font-weight: bold; color: #fff; margin: 8px 0; }
 .result-service { font-size: 18px; font-weight: bold; color: #fff; font-weight: 500; margin-bottom: 12px; }
+.copy-button {background: #333; border: none; color: #fff; cursor: pointer; padding: 4px 6px; border-radius: 4px; font-size: 14px;}
 .listen-btn { display: block; padding: 10px 20px; background: #fff; color: #121212; text-decoration: none; border-radius: 25px; font-weight: bold; margin: 0 auto 12px auto; max-width: 180px; }
 .now-playing-btn { width: 100%; padding: 10px; background: #2c5d88; border: none; border-radius: 8px; color: white; font-weight: bold; font-size: 13px; cursor: pointer; margin-bottom: 10px; }
 .now-playing-btn:hover { background: #3672a5; }
@@ -151,201 +59,71 @@ textarea.add-input {
 .rate-btn.dislike { background: #912F2F; }
 
 /* Верхний ряд: Обложка + Инфо станут строго в одну линию */
-.meta-layout {
-  display: flex;
-  gap: 16px;
-  align-items: flex-start;
-  margin-bottom: 12px;
-  width: 100%;
-}
+.meta-layout {display: flex;gap: 16px;align-items: flex-start;margin-bottom: 12px;width: 100%;}
 
 /* Общий контейнер */
-.meta-card-box {
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 12px;
-  padding: 14px;
-  margin: 14px 0;
-  text-align: left;
-  box-sizing: border-box;
-  transition: all 0.3s ease;
-}
+.meta-card-box {background: #f8f9fa;border: 1px solid #e9ecef;border-radius: 12px;padding: 14px;margin: 14px 0;text-align: left;box-sizing: border-box;transition: all 0.3s ease;}
 /* Правая колонка с метаданными */
-.meta-info-side {
-  flex: 1 1 0%;   
-  min-width: 0;   
-  display: flex;
-  flex-direction: column; /* Жестко выстраивает элементы сверху вниз */
-  gap: 6px;       /* Увеличили отступ между строками для лучшей читаемости на Oppo */
-  align-self: flex-start; /* Выравнивает текст по верхнему краю обложки */
-}
+.meta-info-side {flex: 1 1 0%; min-width: 0; display: flex;flex-direction: column;gap: 6px;align-self: flex-start;}
 /* Каждый инфо-блок теперь гарантированно занимает отдельную строку */
-.meta-info-item {
-  font-size: 13.5px;
-  line-height: 1.3;
-  color: #2b303a;
-  white-space: normal;
-  word-break: break-word;
-}
+.meta-info-item {font-size: 13.5px;line-height: 1.3;color: #2b303a;white-space: normal;word-break: break-word;}
 /* Разрешаем жанрам красиво переноситься на новые строки */
-.meta-info-item.text-wrap {
-  white-space: normal;
-}
+.meta-info-item.text-wrap {  white-space: normal;}
 /* Строка информации */
-.meta-info-row {
-  font-size: 13.5px;
-  color: #2b303a;
-  line-height: 1.4;
-  white-space: normal;      
-  word-break: break-word;   
-}
+.meta-info-row {font-size: 13.5px;color: #2b303a;line-height: 1.4;white-space: normal; word-break: break-word;}
 /* Жанры */
-.meta-tags {
-  color: #007bff;
-  font-weight: 500;
-}
-.meta-links-title {
-  font-size: 12px;
-  font-weight: bold;
-  color: #6c757d;
-  margin-bottom: 6px;
-}
-.meta-links-wrapper {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
+.meta-tags {color: #007bff; font-weight: 500;}
+.meta-links-title {font-size: 12px;font-weight: bold;color: #6c757d;margin-bottom: 6px;}
+.meta-links-wrapper {display: flex;flex-wrap: wrap;gap: 6px;}
 /* Кнопки-ссылки */
-.meta-link-btn {
-  display: inline-block;
-  background: #ffffff;
-  border: 1px solid #ced4da;
-  color: #495057;
-  padding: 4px 10px;
-  border-radius: 14px;
-  font-size: 12px;
-  text-decoration: none;
-  font-weight: 500;
-  transition: all 0.15s ease;
-}
-.meta-link-btn.primary-mb {
-  background: #ebfffa;
-  border-color: #23a07e;
-  color: #1c6e57;
-}
-.meta-link-btn:hover {
-  background: #007bff;
-  color: #ffffff;
-  border-color: #007bff;
-}
+.meta-link-btn {display: inline-block;background: #ffffff;border: 1px solid #ced4da;color: #495057;padding: 4px 10px;border-radius: 14px;font-size: 12px;text-decoration: none;font-weight: 500;transition: all 0.15s ease;}
+.meta-link-btn.primary-mb {background: #ebfffa;border-color: #23a07e;color: #1c6e57;}
+.meta-link-btn:hover {background: #007bff;color: #ffffff;border-color: #007bff;}
 /* Кликабельный контейнер обложки */
-.meta-cover-link {
-  display: block;
-  flex: 0 0 85px;  
-  width: 85px;     
-  height: 85px;    
-  border-radius: 8px;
-  overflow: hidden;
-  background: #e9ecef;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.meta-cover-link:hover {
-  transform: scale(1.03);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-}
+.meta-cover-link {display: block;flex: 0 0 85px;  width: 85px;     height: 85px;    border-radius: 8px;overflow: hidden;background: #e9ecef;box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);transition: transform 0.2s ease, box-shadow 0.2s ease;}
+.meta-cover-link:hover {transform: scale(1.03);box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);}
 /* Контейнер обложки */
-.meta-cover-side {
-  flex-shrink: 0;
-  width: 75px;
-  height: 75px;
-  position: relative;
-}
-.meta-album-art {
-  width: 100%;
-  height: 100%;
-  object-fit: cover; 
-  display: block;
-  opacity: 0;
-  animation: fadeInImage 0.3s ease forwards;
-}
+.meta-cover-side {flex-shrink: 0;width: 75px;height: 75px;position: relative;}
+.meta-album-art {width: 100%;height: 100%;object-fit: cover; display: block;opacity: 0;animation: fadeInImage 0.3s ease forwards;}
 /* Нижний блок внешних ссылок */
-.meta-footer-links {
-  border-top: 1px dashed #dee2e6;
-  padding-top: 8px;
-}
+.meta-footer-links {border-top: 1px dashed #dee2e6;padding-top: 8px;}
 /* Анимация проявления картинки */
-@keyframes fadeInImage {
-  to { opacity: 1; }
-}
+@keyframes fadeInImage {  to { opacity: 1; }}
 
 /* АДАПТАЦИЯ ПОД ТЕМНУЮ ТЕМУ */
+/* Базовые настройки адаптации */
+/* Двухколоночный макет метаданных MusicBrainz в темной теме */
+.meta-card-box {background: #1e1e1e; border: 1px solid #2d2d2d;border-radius: 12px;padding: 12px;margin: 14px 0;box-sizing: border-box;}
+.meta-layout {display: flex;gap: 14px;align-items: flex-start;width: 100%;}
+.meta-cover-link {display: block;flex: 0 0 85px;  width: 85px;     height: 85px;    border-radius: 8px;overflow: hidden;background: #2d2d2d;box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);}
+.meta-album-art {width: 100%;height: 100%;object-fit: cover;display: block;}
+.meta-info-side {flex: 1 1 0%;   min-width: 0;   display: flex;flex-direction: column;gap: 6px;       }
+.meta-info-item {font-size: 13px;color: #e0e0e0;line-height: 1.3;}
+.meta-tags {color: #64b5f6;font-weight: 500;}
+.meta-footer-links {border-top: 1px dashed #3d3d3d;padding-top: 8px;margin-top: 10px;}
+.meta-links-wrapper {display: flex;flex-wrap: wrap;gap: 6px;}
+.meta-link-btn {background: #2a2a2a;border: 1px solid #404040;color: #cccccc;padding: 4px 10px;border-radius: 14px;font-size: 11px;text-decoration: none;}
+.meta-link-btn.primary-mb {background: #162d27;border-color: #1f7a60;color: #5cdbb5;}
 /* В темной теме применяем правильный цвет текста */
 @media (prefers-color-scheme: dark) {
   /* Затемняем сам подфрейм, делая его чуть светлее основного фона приложения */
-  .meta-card-box {
-    background: #1e1e1e; 
-    border-color: #2d2d2d;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  }
-  .meta-info-item {
-    color: #e0e0e0;
-  }
-  .meta-tags {
-    color: #64b5f6;
-  }
-  /* Текст метаданных */
-  .meta-info-row {
-    color: #e0e0e0;
-  }
-
+   .meta-card-box {background: #1e1e1e; border-color: #2d2d2d; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }  
+  .meta-info-item {color: #e0e0e0; }
+  .meta-tags {color: #64b5f6; }
+  .meta-info-row {color: #e0e0e0; }
   /* Жанры делаем более яркими для контраста в темноте */
-  .meta-tags {
-    color: #64b5f6; 
-  }
-
+  .meta-tags {color: #64b5f6; }
   /* Тень для обложки в темной теме */
-  .meta-cover-link {
-    background: #2d2d2d;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-  }
-
+  .meta-cover-link {background: #2d2d2d; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); }
   /* Разделительная линия */
-  .meta-footer-links {
-    border-top-color: #3d3d3d;
-  }
-
-  .meta-links-title {
-    color: #888888;
-  }
-
+  .meta-footer-links {border-top-color: #3d3d3d; }
+  .meta-links-title {color: #888888; }
   /* Кнопки-ссылки в темной теме */
-  .meta-link-btn {
-    background: #2a2a2a;
-    border-color: #404040;
-    color: #cccccc;
-  }
-
-  .meta-link-btn:hover {
-    background: #29b6f6;
-    color: #121212;
-    border-color: #29b6f6;
-    box-shadow: 0 0 8px rgba(41, 182, 246, 0.4);
-  }
-
+  .meta-link-btn {background: #2a2a2a; border-color: #404040; color: #cccccc; }
+  .meta-link-btn:hover {background: #29b6f6; color: #121212; border-color: #29b6f6; box-shadow: 0 0 8px rgba(41, 182, 246, 0.4); }
   /* Фирменная кнопка MusicBrainz в темной теме */
-  .meta-link-btn.primary-mb {
-    background: #162d27;
-    border-color: #1f7a60;
-    color: #5cdbb5;
-  }
-
-  .meta-link-btn.primary-mb:hover {
-    background: #23a07e;
-    color: #ffffff;
-    border-color: #23a07e;
-    box-shadow: 0 0 8px rgba(35, 160, 126, 0.4);
-  }
+  .meta-link-btn.primary-mb {background: #162d27; border-color: #1f7a60; color: #5cdbb5; }
+  .meta-link-btn.primary-mb:hover {background: #23a07e; color: #ffffff; border-color: #23a07e; box-shadow: 0 0 8px rgba(35, 160, 126, 0.4); }
 }
     </style>
 </head>
@@ -354,11 +132,6 @@ textarea.add-input {
 <div class="card">
     <h2>🎵 Облачный Рандомизатор</h2>
     
-    <!-- Панель облачной синхронизации -->
-    <div class="cloud-panel">
-        <button class="cloud-btn load" onclick="loadFromCloud()">☁️ Загрузить из таблицы</button>
-    </div>
-    
     <div class="add-block">
         <textarea id="newAlbumsInput" class="add-input" placeholder="Исполнитель - Альбом..."></textarea>
         <button class="add-btn" onclick="addAlbums()">Добавить релизы ➕</button>
@@ -366,9 +139,10 @@ textarea.add-input {
     
     <label>🎧 Сейчас слушается на сервисах:</label>
     <div id="activeSessionsContainer" class="list-container active-sessions"></div>
-
-    <!-- Очередь неслушанного -->
-    <label>📚 В очереди (неслушанное): (<span id="countQueue">0</span>)</label>
+    <!-- Информационная панель + Умный статус сети -->
+    <div class="status-bar">
+      <h3>📚 В очереди: <span id="countQueue">0</span></h3>
+    </div>
 
     <div class="services-group">
         <label class="service-item"><input type="checkbox" value="Yandex" checked> Yandex Music</label>
@@ -386,17 +160,7 @@ textarea.add-input {
         <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin: 10px 0;">
             <div id="resAlbum" class="result-value" style="margin: 0;"></div>
             <!-- Кнопка копирования -->
-            <button onclick="copyToClipboard(resAlbum)" title="Скопировать название" 
-            style="
-                background: #333; 
-                border: none; 
-                color: #fff; 
-                cursor: pointer; 
-                padding: 4px 6px; 
-                border-radius: 4px; 
-                font-size: 14px;
-            ">
-            📋</button>
+            <button onclick="copyToClipboard(resAlbum)" title="Скопировать название" class="copy-button"> 📋</button>
         </div>
         <div class="result-title">в сервисе:</div>
         <div id="resService" class="result-service"></div>
@@ -429,122 +193,203 @@ const SUPABASE_ANON_KEY = "sb_publishable_ZaFXrDhp8Tx5p_X93DB7wQ_4wPZzyk8";
 const TABLE_NAME = "albums_to_listen"; // Имя вашей таблицы в Supabase
 // =========================================================================
 const POCKETBASE_URL = "http://192.168.1.166:8099"; 
-const POCKETBASE_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb2xsZWN0aW9uSWQiOiJwYmNfMzE0MjYzNTgyMyIsImV4cCI6MTc5MTQxMDk0OSwiaWQiOiJ6c2F5c3lwdTR2NnBibHYiLCJyZWZyZXNoYWJsZSI6ZmFsc2UsInR5cGUiOiJhdXRoIn0.edK1vgms-oTkJjvMH7RXMW2k5O2VdCWXKEV4qvnZ5rk";
+// const POCKETBASE_TOKEN = "";
 // =========================================================================
 
 
-//let queueAlbums = [];
-let activeSessions =[];
-const serviceNames = { Yandex: "Yandex Music", Spotify: "Spotify", YTMusic: "YouTube Music", Qobuz: "Qobuz", Deezer: "Deezer", Tidal: "Tidal"};
-let lastGeneratedAlbum = null;
-let lastGeneratedServiceKey = null;
+// Глобальные массивы для текущего интерфейса виджета
+window.queueAlbums = [];
+window.currentActiveSessions = [];
+window.isOfflineMode = false; // Флаг текущего режима работы сети
+const serviceNames = { 
+  Yandex: "Yandex Music", 
+  Spotify: "Spotify", 
+  YTMusic: "YouTube Music", 
+  Qobuz: "Qobuz", 
+  Deezer: "Deezer", 
+  Tidal: "Tidal"
+};
+let generatedAlbum = null;
+let generatedService = null;
+// Переменная для отслеживания текущего альбома, чтобы кнопка Refresh знала, что запрашивать
+let currentMetaAlbumString = "";
+let queueFetchRetryCount = 0;
+const MAX_FETCH_RETRIES = 3;
+
+// Инициализируем локальную базу данных в браузере девайса (ПК или Oppo)
+const db = new Dexie("MusicHybridDB");
+db.version(2).stores({
+  // Кэшируем серверный id из PocketBase для мгновенных точечных PATCH-запросов
+  albums: 'id, album, listened, note, rating, service',
+  sync_logs: '++id, action, album, recordId, rating, note, service, timestamp'
+});
 
 window.onload = function() {
     loadFromCloud();
 };
 
-let queueFetchRetryCount = 0;
-const MAX_FETCH_RETRIES = 3;
-
 async function loadFromCloud() {
-    const cacheBuster = new Date().getTime();
-    // ==========================================================================
-    //  ЗАГРУЗКА АКТИВНЫХ СЕССИЙ (listened = 'listening')
-    // ==========================================================================
-    try {
-      const sessionsUrl = `${POCKETBASE_URL}/api/collections/albums_to_listen/records?filter=(listened='listening')&_cb=${cacheBuster}`;
-      const sResponse = await fetch(sessionsUrl, { method: 'GET', cache: 'no-store', headers: {"Authorization": `${POCKETBASE_TOKEN}`}});
+  const cacheBuster = new Date().getTime();
+  const counter = document.getElementById('countQueue');
+  // ==========================================================================
+  //  ЗАГРУЗКА АКТИВНЫХ СЕССИЙ (listened = 'listening')
+  // ==========================================================================
+  try {
+    // Тест связи с PocketBase (таймаут 2.5 секунды, чтобы не вешать Oppo в дороге)
+    const sessionsUrl = `${POCKETBASE_URL}/api/collections/albums_to_listen/records?filter=(listened='listening')&_cb=${cacheBuster}`;
+    const sResponse = await fetch(sessionsUrl, { 
+      method: 'GET', 
+      cache: 'no-store', 
+      signal: AbortSignal.timeout(2500)
+    });
+    console.info("PocketBase доступен");
 
-      if (sResponse.ok) {
-        const sData = await sResponse.json();
-        window.currentActiveSessions = sData.items;
-        if (typeof renderActiveSessions === 'function') renderActiveSessions();
-      }
-    } catch (err) {
-      console.error("Ошибка загрузки активных сессий:", err);
+    if (sResponse.ok) {
+      // --- РЕЖИМ ОНЛАЙН ---
+      window.isOfflineMode = false;
+
+      const sData = await sResponse.json();
+      window.currentActiveSessions = sData.items;
+      if (typeof renderActiveSessions === 'function') renderActiveSessions();
     }
+    else { throw new Error("SERVER_BUSY"); }
 
-    // ==========================================================================
-    //  ЗАГРУЗКА всего
-    // ==========================================================================
-    try {
-
-      let tempQueue = [];      // Сюда будем собирать пачки
-      let currentPage = 1;          // Стартовая позиция для Range
-      const chunkSize = 500;   // Размер одной пачки данных
-      let hasMoreData = true;  // Флаг остановки цикла
+    let tempQueue = [];      // Сюда будем собирать пачки
+    let currentPage = 1;          // Стартовая позиция для Range
+    const chunkSize = 500;   // Размер одной пачки данных
+    let hasMoreData = true;  // Флаг остановки цикла
+    
+    while (hasMoreData) {
+      const queueBaseUrl = `${POCKETBASE_URL}/api/collections/albums_to_listen/records` + 
+                     `?page=${currentPage}` +
+                     `&perPage=${chunkSize}` +
+                     `&filter=(listened='')` +
+                     `&_cb=${cacheBuster}`;
+      // Формируем диапазон
+      const rangeHeader = `${currentPage}-${currentPage + chunkSize - 1}`;
       
-      while (hasMoreData) {
-        const queueBaseUrl = `${POCKETBASE_URL}/api/collections/albums_to_listen/records` + 
-                       `?page=${currentPage}` +
-                       `&perPage=${chunkSize}` +
-                       `&filter=(listened='')` +
-                       `&_cb=${cacheBuster}`;
-        // Формируем диапазон
-        const rangeHeader = `${currentPage}-${currentPage + chunkSize - 1}`;
-        
-        // Запрашиваем данные напрямую из Supabase
-        const response = await fetch(
-          queueBaseUrl, {
-            method: "GET",
-            cache: 'no-store',
-            headers: {
-              "Authorization": `${POCKETBASE_TOKEN}`,
-            }
-          });
+      // Запрашиваем данные напрямую из Supabase
+      const response = await fetch(
+        queueBaseUrl, {
+          method: "GET",
+          cache: 'no-store'
+        });
 
-        if (!response.ok) {
-          const errText = await response.text();
-          console.error("Ответ сервера:", errText);
-          throw new Error(`Сбой на диапазоне ${rangeHeader}: ${response.status}`);
-        }
-        
-        // Проверяем валидность прилетевшего текста
-        //const rawText = (await response.text()).trim();
-        //if (!rawText.startsWith('[') || !rawText.endsWith(']')) {
-        //  throw new Error(`INCOMPLETE_CHUNK (Данные на диапазоне ${rangeHeader} повреждены)`);
-        //}
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error("Ответ сервера:", errText);
+        throw new Error(`Сбой на диапазоне ${rangeHeader}: ${response.status}`);
+      }
+      
+      const chunkData = await response.json();
 
-        const chunkData = await response.json();
-
-        // Склеиваем полученную пачку с основным массивом в памяти
-        if (chunkData.items && chunkData.items.length > 0) {
-          tempQueue = tempQueue.concat(chunkData.items);
-        }
-
-        // Если сервер вернул меньше строк, чем мы просили (меньше 500) — значит, база закончилась
-        if (chunkData.items.length < chunkSize) {
-          hasMoreData = false;
-        } else {
-          // Иначе сдвигаем указатель на следующие 500 строк
-          currentPage++;
-        }
+      // Склеиваем полученную пачку с основным массивом в памяти
+      if (chunkData.items && chunkData.items.length > 0) {
+        tempQueue = tempQueue.concat(chunkData.items);
       }
 
-      // Записываем финальный склеенный массив в глобальную переменную
-      window.queueAlbums = tempQueue;
-      queueFetchRetryCount = 0; // Сброс счетчика ошибок при полном успехе
-
-    } catch (error) {
-      console.error("Ошибка циклической загрузки очереди:", error.message);
-
-      // Автоповтор при падении сети или битом JSON в любой из пачек
-      if (queueFetchRetryCount < MAX_FETCH_RETRIES) {
-        queueFetchRetryCount++;
-        setTimeout(() => {
-          loadFromCloud();
-        }, 2500);
+      // Если сервер вернул меньше строк, чем мы просили (меньше 500) — значит, база закончилась
+      if (chunkData.items.length < chunkSize) {
+        hasMoreData = false;
       } else {
-        console.error("❌ Ошибка сети", error.message);
+        // Иначе сдвигаем указатель на следующие 500 строк
+        currentPage++;
       }
     }
+    // Записываем финальный склеенный массив в глобальную переменную
+    window.queueAlbums = tempQueue;
+    console.info("queueAlbums", queueAlbums.length);
 
-    const counter = document.getElementById('countQueue');
-    if (counter) counter.innerText = queueAlbums.length;
+    queueFetchRetryCount = 0; // Сброс счетчика ошибок при полном успехе
+
+    // ОБНОВЛЯЕМ ЛОКАЛЬНЫЙ КЭШ: Сохраняем всё в IndexedDB (включая серверные id)
+    await db.albums.clear();
+    await db.albums.bulkPut(tempQueue);
+    if (window.currentActiveSessions.length > 0) {
+      await db.albums.bulkPut(window.currentActiveSessions);
+    }
+
+    // Проверяем, есть ли накопившиеся логи из отпуска
+    const pendingLogsCount = await db.sync_logs.count();
+    if (counter) {
+      if (pendingLogsCount > 0) {
+        counter.innerHTML = `${window.queueAlbums.length} <span style="color:#ffc107; font-size:12px; cursor:pointer; font-weight:bold; text-decoration:underline;" onclick="syncLocalLogsWithPocketBase()">🔄 Есть офлайн-изменения (${pendingLogsCount})! Нажмите для синхронизации</span>`;
+      } else {
+        counter.innerHTML = `<span style="color:#28a745; font-weight:bold;">🟢 ${window.queueAlbums.length} (Online)</span>`;
+      }
+    }
+  } catch (err) {
+      // --- АВТОМАТИЧЕСКИЙ УХОД В АВТОНОМНЫЙ РЕЖИМ ---
+    console.warn("PocketBase недоступен. Работаем из локальной IndexedDB:", err);
+    window.isOfflineMode = true;
+
+    // Мгновенно достаем данные из флеш-памяти Oppo / ПК
+    window.queueAlbums = await db.albums.where('listened').equals('').toArray();
+    window.currentActiveSessions = await db.albums.where('listened').equals('listening').toArray();
+
+    renderActiveSessions();
+    
+    if (counter) {
+      counter.innerHTML = `<span style="color:#ff9800; font-weight:bold;">🌙 ${window.queueAlbums.length} (Offline)</span>`;
+    }
+  }
 }
 
+// РАНДОМИЗАТОР
+function generateSelection() {
+    const checkboxes = document.querySelectorAll('.services-group input:checked');
+    const services = Array.from(checkboxes).map(cb => cb.value);
 
-// Отрисовка НОВОГО фрейма активных сессий прослушивания
+    if (queueAlbums.length === 0) {
+        alert('Очередь альбомов пуста!');
+        return;
+    }
+    if (services.length === 0) {
+        alert('Выберите хотя бы один сервис!');
+        return;
+    }
+
+    const randomAlbum = queueAlbums[Math.floor(Math.random() * queueAlbums.length)];
+    const randomService = services[Math.floor(Math.random() * services.length)];
+    
+    generatedAlbum = randomAlbum; // Запоминаем, какой альбом выпал
+    generatedService = randomService;
+
+    document.getElementById('resAlbum').innerText = randomAlbum.album;
+    document.getElementById('resService').innerText = serviceNames[randomService];
+    document.getElementById('albumMemoInput').value = randomAlbum.note ? randomAlbum.note : "";
+
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const q = encodeURIComponent(randomAlbum.album);
+    let url = "";
+
+    if (isMobile) {
+      if (randomService === 'Yandex') url = "yandexmusic://search?text=" + q;
+      else if (randomService === 'Spotify') url = "spotify:search:album:" + q;
+      else if (randomService === 'YTMusic') url = "https://music.youtube.com/search?q=" + q;
+      else if (randomService === 'Deezer') url = "https://www.deezer.com/search/" + q + "/album";
+      else if (randomService === 'Qobuz') url = "https://play.qobuz.com/search?query=" + q + "&i=all";
+      else if (randomService === 'Tidal') url = "tidal://search" + q;
+    } else {
+      if (randomService === 'Yandex') url = "https://music.yandex.ru/search?text=" + q;
+      else if (randomService === 'Spotify') url = "https://open.spotify.com/search/" + q;
+      else if (randomService === 'YTMusic') url = "https://music.youtube.com/search?q=" + q;
+      else if (randomService === 'Deezer') url = "https://www.deezer.com/search/" + q + "/album";
+      else if (randomService === 'Qobuz') url = "https://play.qobuz.com/search?query=" + q + "&i=all";
+      else if (randomService === 'Tidal') url = "https://tidal.com/search/albums?q=" + q;
+    }
+
+    const btn = document.getElementById('searchLink');
+    btn.href = url;
+    btn.style.background = randomService === 'Yandex' ? '#ffcc00' : randomService === 'Spotify' ? '#1db954' : randomService === 'YTMusic' ? '#ff0000' : '#000000';
+    btn.style.color = randomService === 'Yandex' ? '#121212' : '#fff';
+
+
+    document.getElementById('resultBox').style.display = 'block';
+    fetchAlbumMetaFromMusicBrainz(randomAlbum.album);
+}
+
+// Отрисовка фрейма активных сессий прослушивания
 function renderActiveSessions() {
     const container = document.getElementById('activeSessionsContainer');
     if (!container) return;
@@ -562,45 +407,48 @@ function renderActiveSessions() {
         item.style.alignItems = "stretch";
     
         const safeName = album.album.replace(/'/g, "\\'");
-        const albumId = album.id;
+        const pocketId = album.id;
 
         // Генерируем уникальный ID для инпута этой сессии, используя индекс
         const inputId = `sessMemo_${index}`;
         const targetContainerId = `session-meta-${safeName}`;
-
         // Если заметка уже есть в таблице, подставляем её как дефолтное значение (value)
         const currentMemoValue = album.note ? album.note.replace(/"/g, '&quot;') : "";
     
         // Кнопка быстрого закрытия сессии прямо из списка
         item.innerHTML = `
             <div class="session-info">
-                <span class="session-badge">${album.service} | </span> 
+                <button onclick="fallbackCopy('${safeName}')" title="Скопировать название" class="copy-button">📋 </button>
                 <strong>${album.album}</strong>
-                <button onclick="fallbackCopy('${safeName}')" title="Скопировать название" 
-                    style="
-                        background: #333; 
-                        border: none; 
-                        color: #fff; 
-                        cursor: pointer; 
-                        padding: 4px 6px; 
-                        border-radius: 4px; 
-                        font-size: 14px;">
-                📋
-                </button>
+                <span class="session-badge" style="color:#64b5f6; font-weight:bold;"> | ${album.service}</span> 
             </div>
             <div id="${targetContainerId}"></div>
             <!-- Поле ввода комментария прямо внутри карточки сессии -->
             <div style="margin-bottom: 10px;">
-                <input type="text" id="${inputId}" class="memo-input" style="margin-top: 0; width: 100%;" 
-                       placeholder="Добавить финальные впечатления..." value="${currentMemoValue}">
+                <input type="text" id="${inputId}" class="memo-input" 
+                  style="margin-top: 0; width: 100%;" 
+                  placeholder="Добавить финальные впечатления..." 
+                  value="${currentMemoValue}"
+                >
             </div>
             
             <div class="session-actions" style="justify-content: flex-end; width: 100%; border-top: 1px solid #2c3e50; padding-top: 8px;">
                 <!-- Передаем ID инпута в функцию закрытия сессии -->
-                <button class="sess-btn liked" onclick="finishSessionDirectly('${albumId}', 'liked', '${inputId}')">👍</button>
-                <button class="sess-btn ok" onclick="finishSessionDirectly('${albumId}', 'ok', '${inputId}')">ok</button>
-                <button class="sess-btn meh" onclick="finishSessionDirectly('${albumId}', 'meh', '${inputId}')">meh</button>
-                <button class="sess-btn disliked" onclick="finishSessionDirectly('${albumId}', 'disliked', '${inputId}')">👎</button>
+                <button class="sess-btn liked" 
+                  onclick="finishSessionDirectly('${pocketId}', 'liked', '${inputId}')"
+                >👍</button>
+                
+                <button class="sess-btn ok" 
+                  onclick="finishSessionDirectly('${pocketId}', 'ok', '${inputId}')"
+                >ok</button>
+                
+                <button class="sess-btn meh" 
+                  onclick="finishSessionDirectly('${pocketId}', 'meh', '${inputId}')"
+                >meh</button>
+                
+                <button class="sess-btn disliked" 
+                  onclick="finishSessionDirectly('${pocketId}', 'disliked', '${inputId}')"
+                >👎</button>
             </div>
         `;
         container.appendChild(item);
@@ -609,172 +457,198 @@ function renderActiveSessions() {
 }
 
 // Закрытие сессии напрямую из фрейма кнопками
-async function finishSessionDirectly(albumId, ratingValue, inputId) {
-    // Находим инпут на экране по его уникальному ID и забираем текст
-    const inputElement = document.getElementById(inputId);
-    const finalMemo = inputElement ? inputElement.value.trim() : "";
+async function finishSessionDirectly(pocketId, ratingValue, inputId) {
+  // Находим инпут на экране по его уникальному ID и забираем текст
+  const inputElement = document.getElementById(inputId);
+  const finalMemo = inputElement ? inputElement.value.trim() : "";
+  // const pocketId = generatedAlbum.id;
+  const timestamp = new Date().getTime();
 
+  if (window.isOfflineMode) {
+    // ОФЛАЙН: Пишем локально на устройство
+    await db.albums.update(pocketId, { 
+      listened: 'true', 
+      rating: ratingValue, 
+      note: finalMemo 
+    });
+    await db.sync_logs.add({ 
+      action: 'finish', 
+      album: currentActiveSessions.album, 
+      recordId: pocketId, 
+      rating: ratingValue, 
+      note: finalMemo, 
+      timestamp: timestamp 
+    });
+    await loadFromCloud();
+  } else {
     try {
-        const url = `${POCKETBASE_URL}/api/collections/albums_to_listen/records/${encodeURIComponent(albumId)}`;
+      const url = `${POCKETBASE_URL}/api/collections/albums_to_listen/records/${pocketId}`;
         
-        await fetch(url, {
-            method: 'PATCH',
-            headers: {
-              "Authorization": `${POCKETBASE_TOKEN}`,
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                listened: 'true',
-                rating: ratingValue,
-                note: finalMemo
-            })
-        });
-        loadFromCloud();
-    } catch (e) {
-        alert("Ошибка: " + e.message);
+      await fetch(url, {
+        method: 'PATCH',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          listened: 'true',
+          rating: ratingValue,
+          note: finalMemo
+        })
+      });
+      loadFromCloud();
+      } catch (e) {
+          console.error("Ошибка: " + e);
+          alert("Ошибка: " + e.message);
+      }
     }
 }
 
 // Команда "Слушаю сейчас" (Фиксация во фрейме и таблице)
 async function markAsListening() {
-    if (!lastGeneratedAlbum || !lastGeneratedServiceKey) return;
-    const memoValue = document.getElementById('albumMemoInput').value.trim();
-    
-    document.getElementById('resultBox').style.display = 'none';
-    
-    try {
-        const url = `${POCKETBASE_URL}/api/collections/albums_to_listen/records/${encodeURIComponent(lastGeneratedAlbum.id)}`;
-        
-        await fetch(url, {
-            method: 'PATCH',
-            headers: {
-              "Authorization": `${POCKETBASE_TOKEN}`,
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ 
-                listened: 'listening',
-                service: serviceNames[lastGeneratedServiceKey],
-                note: memoValue
-            })
-        });
-        document.getElementById('albumMemoInput').value = "";
-        loadFromCloud(); 
-    } catch (e) {
-        alert("Ошибка старта сессии: " + e.message);
-    }
+  if (!generatedAlbum || !generatedService) return;
+  const albumName = generatedAlbum.album;
+  const memoValue = document.getElementById('albumMemoInput').value.trim();
+  const pocketId = generatedAlbum.id;
+  const timestamp = new Date().getTime();
+  
+  document.getElementById('resultBox').style.display = 'none';
+
+  if (window.isOfflineMode) {
+    // ОФЛАЙН: Записываем в IndexedDB Oppo и откладываем лог вместе с pocketId
+    await db.albums.update(pocketId, { 
+      listened: 'listening', 
+      service: generatedService 
+    });
+    await db.sync_logs.add({ 
+      action: 'start', 
+      album: albumName, 
+      recordId: pocketId, 
+      service: generatedService, 
+      timestamp: timestamp 
+    });
+    await loadFromCloud();
+  } else {
+    const url = `${POCKETBASE_URL}/api/collections/albums_to_listen/records/${pocketId}`;
+
+    await fetch(url, {
+        method: 'PATCH',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+            listened: 'listening',
+            service: serviceNames[generatedService],
+            note: memoValue
+        })
+    });
+
+    document.getElementById('albumMemoInput').value = "";
+    await loadFromCloud(); 
+  }
+  console.info("pocketId", pocketId);
+  const checkDBrecord = await db.albums.get(pocketId);
+  console.log("checkDBrecord", checkDBrecord);
 }
 
 // ДОБАВЛЕНИЕ НОВОГО АЛЬБОМА ИЗ ВИДЖЕТА В ТАБЛИЦУ
 async function addAlbums() {
-    const input = document.getElementById('newAlbumsInput').value;
-    const lines = input.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-    if (lines.length === 0) return;
+  const input = document.getElementById('newAlbumsInput').value;
+  const lines = input.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  if (lines.length === 0) return;
 
-    document.getElementById('newAlbumsInput').value = "Добавление...";
-    
+  document.getElementById('newAlbumsInput').value = "Добавление...";
+  
+  let addedCount = 0;
+
+  if (window.isOfflineMode) {
+    for (let line of lines) {
+      const exists = await db.albums.get({album: line});
+      if (!exists) {
+        await db.albums.add({ 
+          album: line, 
+          listened: '', 
+          note: ' | added from widget', 
+          rating: '', 
+          service: '' 
+        });
+        await db.sync_logs.add({ action: 'create', 
+          album: line, 
+          timestamp: new Date().getTime() 
+        });
+        addedCount++;
+      }
+    }
+    alert(`[Offline] Альбомы сохранены локально: ${addedCount}. Улетят на сервер при синхронизации.`);
+  } else {
     // Перебираем и отправляем в таблицу построчно
     for (let line of lines) {
-        try {
-            await fetch(`${POCKETBASE_URL}/api/collections/albums_to_listen/records`, { 
-                method: 'POST',
-                headers: {
-                  "Authorization": `${POCKETBASE_TOKEN}`,
-                  "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ 
-                    album: line, 
-                    note: ' | added from widget'
-                }) 
-            });
-        } catch (e) {
-            console.error("Ошибка добавления строки: " + line);
-        }
+      try {
+        await fetch(`${POCKETBASE_URL}/api/collections/albums_to_listen/records`, { 
+            method: 'POST',
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ 
+                album: line, 
+                note: ' | added from widget'
+            }) 
+        });
+      } catch (e) {
+          console.error("Ошибка добавления строки: " + line);
+      }
+      addedCount++;
     }
-
-    document.getElementById('newAlbumsInput').value = "";
-    alert(`Успешно добавлено релизов: ${lines.length}`);
-    loadFromCloud(); // Перезагружаем список
+    alert(`[Online] Успешно добавлено в PocketBase: ${addedCount}`);
+  }
+  input.value = '';
+  await loadFromCloud();
 }
 
 // ОТМЕТКА ПРОСЛУШАНО + ОЦЕНКА ИЗ ВИДЖЕТА В ТАБЛИЦУ
 async function rateLastAlbum(ratingValue) {
-    if (!lastGeneratedAlbum) return;
+  if (!generatedAlbum) return;
 
-    const memoValue = document.getElementById('albumMemoInput').value.trim();
-    const service = lastGeneratedAlbum.service;
-  
-    document.getElementById('resultBox').style.display = 'none';
-    
+  const albumName = generatedAlbum.album;
+  const memoValue = document.getElementById('albumMemoInput').value.trim();
+  // const service = generatedAlbum.service;
+  const timestamp = new Date().getTime();
+  const pocketId = generatedAlbum.id;
+
+  document.getElementById('resultBox').style.display = 'none';
+
+  if (window.isOfflineMode) {
+    // ОФЛАЙН: Пишем локально на устройство
+    await db.albums.update(pocketId, { 
+      listened: 'true', 
+      rating: ratingValue, 
+      note: memoValue 
+    });
+    await db.sync_logs.add({ 
+      action: 'finish', 
+      album: albumName, 
+      recordId: pocketId, 
+      service: generatedService, 
+      timestamp: timestamp
+    });
+    await loadFromCloud();
+  } else {
     try {
-        const url = `${POCKETBASE_URL}/api/collections/albums_to_listen/records/${encodeURIComponent(lastGeneratedAlbum.id)}`;
-        
-        await fetch(url, {
-            method: 'PATCH',
-            headers: {
-              "Authorization": `${POCKETBASE_TOKEN}`,
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ 
-                listened: 'true',
-                rating: ratingValue,
-                note: memoValue,
-                service: service
-            })
-        });
-        // Очищаем поле ввода для следующего раза
-        document.getElementById('albumMemoInput').value = "";
-        loadFromCloud(); // Обновляем список, альбом исчезнет из очереди
+      const url = `${POCKETBASE_URL}/api/collections/albums_to_listen/records/${pocketId}`;
+      
+      await fetch(url, {
+          method: 'PATCH',
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+              listened: 'true',
+              rating: ratingValue,
+              note: memoValue,
+              service: generatedService
+          })
+      });
+      // Очищаем поле ввода для следующего раза
+      document.getElementById('albumMemoInput').value = "";
+      await loadFromCloud(); // Обновляем список, альбом исчезнет из очереди
     } catch (e) {
         alert("Ошибка отправки оценки в таблицу: " + e.message);
     }
+  }
 }
 
-// РАНДОМИЗАТОР
-function generateSelection() {
-    const checkboxes = document.querySelectorAll('.services-group input:checked');
-    const keys = Array.from(checkboxes).map(cb => cb.value);
-
-    if (queueAlbums.length === 0) {
-        alert('Очередь альбомов пуста!');
-        return;
-    }
-    if (keys.length === 0) {
-        alert('Выберите хотя бы один сервис!');
-        return;
-    }
-
-    const randomAlbum = queueAlbums[Math.floor(Math.random() * queueAlbums.length)];
-    const randomKey = keys[Math.floor(Math.random() * keys.length)];
-    
-    lastGeneratedAlbum = randomAlbum; // Запоминаем, какой альбом выпал
-    lastGeneratedServiceKey = randomKey;
-
-    document.getElementById('resAlbum').innerText = randomAlbum.album;
-    document.getElementById('resService').innerText = serviceNames[randomKey];
-    document.getElementById('albumMemoInput').value = randomAlbum.note ? randomAlbum.note : "";
-
-    const q = encodeURIComponent(randomAlbum.album);
-    let url = "";
-
-    if (randomKey === 'Yandex') url = "https://music.yandex.ru/search?text=" + q;
-    else if (randomKey === 'Spotify') url = "https://open.spotify.com/search/" + q;
-    else if (randomKey === 'YTMusic') url = "https://music.youtube.com/search?q=" + q;
-    else if (randomKey === 'Deezer') url = "https://www.deezer.com/search/" + q + "/album";
-    else if (randomKey === 'Qobuz') url = "https://play.qobuz.com/search?query=" + q + "&i=all";
-    else if (randomKey === 'Tidal') url = "https://tidal.com/search/albums?q=" + q;
-
-    const btn = document.getElementById('searchLink');
-    btn.href = url;
-    btn.style.background = randomKey === 'Yandex' ? '#ffcc00' : randomKey === 'Spotify' ? '#1db954' : randomKey === 'YTMusic' ? '#ff0000' : '#000000';
-    btn.style.color = randomKey === 'Yandex' ? '#121212' : '#fff';
-
-    document.getElementById('resultBox').style.display = 'block';
-    fetchAlbumMetaFromMusicBrainz(randomAlbum.album);
-}
-
-// Переменная для отслеживания текущего альбома, чтобы кнопка Refresh знала, что запрашивать
-let currentMetaAlbumString = "";
-
+// загрузить инфу с MusicBrainz
 async function fetchAlbumMetaFromMusicBrainz(albumString, isRetry = false, targetId = 'album-meta-box') {
   const metaBox = document.getElementById(targetId);
   if (!metaBox) return;
@@ -989,6 +863,63 @@ function fallbackCopy(text) {
     }
     
     document.body.removeChild(textArea);
+}
+
+// Накат оффлайн изменений по готовым ID
+async function syncLocalLogsWithPocketBase() {
+  const counter = document.getElementById('tempQueue');
+  const logs = await db.sync_logs.toArray();
+  if (logs.length === 0) return;
+
+  if (counter) counter.innerHTML = `<span 
+      style="color:#ffc107; font-size:12px; font-weight:bold;"
+    >⏳ Синхронизирую офлайн-записи (${logs.length})...</span>`;
+
+  try {
+    for (let log of logs) {
+      if (log.action === 'create') {
+          await fetch(`${POCKETBASE_URL}/api/collections/albums_to_listen/records/${log.recordId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              album: log.album, 
+              listened: '', 
+              note: ' | added from widget', 
+              rating: '', 
+              service: '' 
+            })
+          });
+      }
+      else if (log.action === 'start' || log.action === 'finish') {
+        let updateBody = {};
+        if (log.action === 'start') updateBody = { 
+            listened: 'listening', 
+            service: log.service,
+            note: log.note 
+          };
+        if (log.action === 'finish') updateBody = { 
+            listened: 'true',
+            service: log.service,
+            rating: log.rating, 
+            note: log.note 
+          };
+
+        await fetch(`${POCKETBASE_URL}/api/collections/albums_to_listen/records/${log.recordId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updateBody)
+        });
+      }
+    }
+
+    await db.sync_logs.clear();
+    alert("Все офлайн-изменения успешно отправлены в PocketBase! 🎉");
+    await loadFromCloud();
+  } catch (err) {
+    console.error("Критический сбой синхронизации:", err);
+    alert("Синхронизация прервалась. Проверьте сеть до PocketBase.");
+    await loadFromCloud();
+  }
 }
 
 </script>
